@@ -113,7 +113,7 @@ struct TableVariable
 
 struct KeywordDetection
 {
-   int table_first_vector[5][2]
+   vector<vector<int>> table_first_vector =
    {
       {(int)'e', 0 },
       {(int)'j', 2 },
@@ -122,7 +122,7 @@ struct KeywordDetection
       {(int)'w', 13 }
    };
 
-   int table_detection[17][3]
+   vector<vector<int>> table_detection
    {
       {(int)'n', B1b, -1},
       {(int)'d', C1b, -1},
@@ -153,18 +153,17 @@ struct KeywordDetection
       E2a,
       E2b,
       E3a
-
    };
 };
 
 //Таблица констант
-TableConst table_constants;
+vector<int*> table_constants;
 
 //Таблица переменных
-TableVariable table_variable;
+vector<string> table_variable;
 
 //Таблица лексем для вывода
-TableToken table_tokens;
+vector<SymbolicToken> table_tokens;
 
 //Таблицы для обнаружения ключевых слов
 const KeywordDetection table_detection;
@@ -172,71 +171,18 @@ const KeywordDetection table_detection;
 class TableToken
 {
 public:
-   SymbolicToken* array;
-   int size;
-   int capacity;
-
-   TableToken()
-   {
-      array = new SymbolicToken[10];
-      array[0].value = -1;
-      array[0].token_class = start;
-      array[0].number_line = -1;
-      size = 0;
-      capacity = 10;
-   }
-
-   TableToken(TableToken& other_)
-   {
-      size = other_.size;
-      capacity = other_.capacity;
-      array = new SymbolicToken[other_.capacity];
-      for (int i = 0; i < other_.size; i++)
-      {
-         array[i].value = other_.array[i].value;
-         array[i].token_class = other_.array[i].token_class;
-         array[i].number_line = other_.array[i].number_line;
-      }
-   }
-
-   ~TableToken()
-   {
-      delete[] array;
-      size = 0;
-      capacity = 0;
-   }
-
-   TableToken operator=(TableToken other_)
-   {
-      if (other_.size == 0)
-         throw "Uninitialized variables";
-
-      if (other_.size >= capacity)
-      {
-         delete[] array;
-         capacity = other_.capacity;
-         array = new SymbolicToken[other_.capacity];
-      }
-
-      size = other_.size;
-      for (int i = 0; i < other_.size; i++)
-         array[i] = other_.array[i];
-
-      return *this;
-   }
 
    void Print()
    {
-
-      for (int i = 0; i < size; i++)
+      for (int i = 0; i < table_tokens.size(); i++)
       {
-         cout << TokenTypeString[array[i].token_class] << " ";
-         if (array[i].token_class == TokenType::ARITHMETIC_OPERATION)
+         cout << TokenTypeString[table_tokens[i].token_class] << " ";
+         if (table_tokens[i].token_class == TokenType::ARITHMETIC_OPERATION)
          {
-            cout << get<2>(array[i].value);
+            cout << get<2>(table_tokens[i].value);
 
 
-            switch (get<0>(array[i].value))
+            switch (get<0>(table_tokens[i].value))
             {
             case ('+'):
                cout << '+';
@@ -263,21 +209,21 @@ public:
                break;
             }
          }
-         else if (array[i].token_class == TokenType::RELATION)
+         else if (table_tokens[i].token_class == TokenType::RELATION)
          {
-            cout << RelationString[get<0>(array[i].value)];
+            cout << RelationString[get<0>(table_tokens[i].value)];
          }
-         else if (array[i].token_class == TokenType::COMMENT || array[i].token_class == TokenType::READ || 
-                  array[i].token_class == TokenType::WRITE || array[i].token_class == TokenType::END || 
-                  array[i].token_class == TokenType::END_MARKER)
+         else if (table_tokens[i].token_class == TokenType::COMMENT || table_tokens[i].token_class == TokenType::READ ||
+            table_tokens[i].token_class == TokenType::WRITE || table_tokens[i].token_class == TokenType::END ||
+            table_tokens[i].token_class == TokenType::END_MARKER)
             ;//nothing
-         else if (array[i].value.index() == 2)
-            cout << get<2>(array[i].value);
-         else if (array[i].value.index() == 1)
-            cout << get<1>(array[i].value);
-         else if (array[i].value.index() == 0)
-            cout << get<0>(array[i].value);
-         cout << " " << array[i].number_line << endl;
+         else if (table_tokens[i].value.index() == 2)
+            cout << get<2>(table_tokens[i].value);
+         else if (table_tokens[i].value.index() == 1)
+            cout << get<1>(table_tokens[i].value);
+         else if (table_tokens[i].value.index() == 0)
+            cout << get<0>(table_tokens[i].value);
+         cout << " " << table_tokens[i].number_line << endl;
       }
    }
 
@@ -355,130 +301,9 @@ public:
       return result;
    }
 
-   void Expansion_TableConst()
-   {
-      if (table_constants.array == nullptr)
-      {
-         table_constants.array = new int[100];
-         table_constants.size = 0;
-         table_constants.capacity = 100;
-         return;
-      }
 
-      int* temp = new int[2 * table_constants.capacity];
-      table_constants.capacity *= 2;
-
-      for (int i = 0; i < table_constants.size; i++)
-      {
-         temp[i] = table_constants.array[i];
-      }
-
-      table_constants.array = temp;
-   }
-
-   void Expansion_TableToken()
-   {
-      if (table_tokens.array == nullptr)
-      {
-         table_tokens.array = new SymbolicToken[100];
-         table_tokens.size = 0;
-         table_tokens.capacity = 100;
-         return;
-      }
-
-      SymbolicToken* temp = new SymbolicToken[2 * table_tokens.capacity];
-      table_tokens.capacity *= 2;
-
-      for (int i = 0; i < table_tokens.size; i++)
-      {
-         temp[i] = table_tokens.array[i];
-      }
-
-      table_tokens.array = temp;
-   }
-
-   void Expansion_TableVariable()
-   {
-      if (table_variable.array == nullptr)
-      {
-         table_variable.array = new string[100];
-         table_variable.size = 0;
-         table_variable.capacity = 100;
-         return;
-      }
-
-      string* temp = new string[2 * table_variable.capacity];
-      table_variable.capacity *= 2;
-
-      for (int i = 0; i < table_variable.size; i++)
-      {
-         temp[i] = table_variable.array[i];
-      }
-
-      table_variable.array = temp;
-   }
-
-   void Push_Back_TableConst(int register_number)
-   {
-      if (table_constants.size >= table_constants.capacity)
-         Expansion_TableConst();
-      table_constants.array[table_constants.size] = register_number;
-      table_constants.size++;
-   }
-
-   void Push_Back_TableToken(SymbolicToken& token)
-   {
-      if (table_tokens.size >= table_tokens.capacity)
-         Expansion_TableToken();
-      table_tokens.array[table_tokens.size] = token;
-      table_tokens.size++;
-   }
-
-   void Push_Back_TableVariable(string register_variable)
-   {
-      if (table_variable.size >= table_variable.capacity)
-         Expansion_TableVariable();
-      table_variable.array[table_tokens.size] = register_variable;
-      table_variable.size++;
-   }
-
-   int Find_In_Array_TableConst(const int register_number)
-   {
-      if (table_constants.array == nullptr)
-         return -1;
-
-      for (int i = 0; i < table_constants.size; i++)
-      {
-         if (table_constants.array[i] == register_number)
-            return i;
-      }
-      return -1;
-   }
-
-   bool Find_In_Array_TableVariable(const string register_variable)
-   {
-      if (table_variable.array == nullptr)
-         return false;
-
-      for (int i = 0; i < table_variable.size; i++)
-      {
-         if (table_variable.array[i] == register_variable)
-            return true;
-      }
-      return false;
-   }
-
-   int Find_In_Array_table_first_vector(int character)
-   {
-      KeywordDetection arrays;
-      for (int i = 0; i < 5; i++)
-      {
-         if (arrays.table_first_vector[i][0] == character)
-            return arrays.table_first_vector[i][1];
-      }
-      return -1;
-   }
-
+   
+   
    bool Is_Keyword(string word)
    {
       int temp = Find_In_Array_table_first_vector(word[0]);
@@ -572,6 +397,384 @@ public:
    }
 
 
+   //Регистр класса служит для хранения класса лексемы
+   TokenType register_type_token;
+
+   //Регистр указателя содержит указатель на таблицу имён для лексем PUSH и POP
+   variant<int*, string> register_indicator = nullptr;
+
+   //Регистр числа используется для вычисления констант
+   int register_number;
+
+   //Регистр отношения хранит информацию о первом символе отношения
+   int register_relation;
+
+   //Регистр переменной накапливает имя переменной
+   string register_variable;
+
+   //Регистр обнаружения хранит номер позиции в таблице обнаружения для поиска ключевых слов
+   int register_detection;
+
+   //Регистр значения хранит значения лексем
+   int register_value = -1;
+
+   //Номер строки хранит номер текущей строки в программе
+   int number_line = 1;
+
+   //Флаг остановки
+   bool stop = false;
+
+   //Переменная для M1
+   int tempforswitchinM1;
+
+   int state = A1;
+
+   SymbolicToken token;
+
+   void A1a()
+   {
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      number_line++;
+
+      state = A1;
+   }
+
+   void A1b()
+   {
+      number_line++;
+
+      state = A1;
+   }
+   
+   void A2a()
+   {
+      number_line++;
+
+      state = A2;
+   }
+
+   void A2b()
+   {
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      number_line++;
+
+      state = A2;
+   }
+
+   void A2c()
+   {
+      Add_Constant(register_number, register_indicator, register_value);
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      number_line++;
+
+      state = A2;
+   }
+
+   void A2d()
+   {
+      Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      number_line++;
+
+      state = A2;
+   }
+   
+   void A2e()
+   {
+      if (register_relation == Not)
+      {
+         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         state = A2;
+         return;
+      }
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      number_line++;
+
+      state = A2;
+   }
+
+   void A2f()
+   {
+      Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+      number_line++;
+
+      state = A2;
+   }
+
+   void B1a()
+   {
+      register_detection = Find_In_Array_table_first_vector(get<0>(token.value));
+      if (register_detection == -1)
+      {
+         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+      }
+
+      state = B1;
+   }
+
+   void C1a()
+   {
+      register_type_token = TokenType::ARITHMETIC_OPERATION;
+      register_value = get<0>(token.value);
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+      state = C1;
+   }
+
+   void C1e()
+   {
+      Add_Constant(register_number, register_indicator, register_value);
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+      state = C1;
+   }
+
+   void C1f()
+   {
+      Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+      state = C1;
+   }
+
+   void C1g()
+   {
+      if (register_relation == Not)
+      {
+         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         state = C1;
+         return;
+      }
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+      state = C1;
+   }
+
+   void C1h()
+   {
+      if (get<0>(token.value) != Equal)
+      {
+         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         state = C1;
+         return;
+      }
+      if (register_relation >= Not && register_relation <= More)
+         register_relation += 3;//Not + 3 = Not_equal, Less + 3 = Less_or_equal, More + 3 = More_or_equal
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+      state = C1;
+   }
+
+   void D1a()
+   {
+      register_type_token = TokenType::RELATION;
+      register_relation = get<0>(token.value);
+
+      state = D1;
+   }
+
+   void G1a()
+   {
+      register_number = get<0>(token.value);
+
+      state = G1;
+   }
+
+   void G1b()
+   {
+      register_number *= 10;
+      register_number += get<0>(token.value);
+
+      state = G1;
+   }
+
+   void H1a()
+   {
+      register_variable = get<0>(token.value);
+
+      state = H1;
+   }
+
+   void H1b()
+   {
+      register_variable.push_back(get<0>(token.value));
+
+      state = H1;
+   }
+
+   void I1a()
+   {
+      register_type_token = TokenType::COMMENT;
+
+      state = I1;
+   }
+
+   void I2a()
+   {
+      register_type_token = TokenType::COMMENT;
+
+      state = I2;
+   }
+
+   void I2b()
+   {
+      Add_Constant(register_number, register_indicator, register_value);
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      register_type_token = TokenType::COMMENT;
+
+      state = I2;
+   }
+
+   void I2c()
+   {
+      Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      register_type_token = TokenType::COMMENT;
+
+      state = I2;
+   }
+
+   void I2d()
+   {
+      if (register_relation == Not)
+      {
+         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         state = I2;
+         return;
+      }
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      register_type_token = TokenType::COMMENT;
+
+      state = I2;
+   }
+
+   void EXIT1()
+   {
+      register_type_token = TokenType::END_MARKER;
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+      state = Stop;
+   }
+
+   void EXIT2()
+   {
+      if (register_relation == Not)
+      {
+         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         state = Stop;
+         return;
+      }
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      register_type_token = TokenType::END_MARKER;
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+      state = Stop;
+   }
+
+   void EXIT3()
+   {
+      Add_Constant(register_number, register_indicator, register_value);
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      register_type_token = TokenType::END_MARKER;
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+      state = Stop;
+   }
+
+   void EXIT4()
+   {
+      Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      register_type_token = TokenType::END_MARKER;
+      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+      state = Stop;
+   }
+
+   void M1()
+   {
+      tempforswitchinM1 = table_detection.table_detection[register_detection][1];
+      if (table_detection.table_detection[register_detection][0] != get<0>(token.value))
+      {
+         if (table_detection.table_detection[register_detection][2] != -1 && table_detection.table_detection[table_detection.table_detection[register_detection][2]][0] == get<0>(token.value))
+         {
+            tempforswitchinM1 = table_detection.table_detection[table_detection.table_detection[register_detection][2]][1];
+            register_detection = table_detection.table_detection[register_detection][2];
+         }
+         else
+         {
+            Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+            return;
+         }
+      }
+
+      switch (tempforswitchinM1)
+      {
+      case(table_detection.B1b)://B1b
+
+         register_detection++;
+
+         state = B1;
+         break;
+
+      case(table_detection.C1b)://C1b
+
+         register_type_token = TokenType::END;
+         Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+         state = C1;
+         break;
+
+      case(table_detection.C1c)://C1c
+
+         register_type_token = TokenType::READ;
+         Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+         state = C1;
+         break;
+
+      case(table_detection.C1d)://C1d
+
+         register_type_token = TokenType::WRITE;
+         Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+
+         state = C1;
+         break;
+
+      case(table_detection.E1a)://E1a
+
+         register_type_token = TokenType::PUSH;
+
+         state = E1;
+         break;
+
+      case(table_detection.E2a)://E2a
+
+         register_type_token = TokenType::JI;
+
+         state = E2;
+         break;
+
+      case(table_detection.E2b)://E2b
+
+         register_type_token = TokenType::JMP;
+
+         state = E2;
+         break;
+
+      case(table_detection.E3a)://E3a
+
+         register_type_token = TokenType::POP;
+
+         state = E3;
+         break;
+
+      default:
+         state = Stop;
+         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         break;
+      }
+   }
 
 
 
@@ -586,44 +789,11 @@ public:
 
       table_constants.array = nullptr;
 
-      //Регистр класса служит для хранения класса лексемы
-      TokenType register_type_token;
-
-      //Регистр указателя содержит указатель на таблицу имён для лексем PUSH и POP
-      variant<int*, string> register_indicator = nullptr;
-
-      //Регистр числа используется для вычисления констант
-      int register_number;
-
-      //Регистр отношения хранит информацию о первом символе отношения
-      int register_relation;
-
-      //Регистр переменной накапливает имя переменной
-      string register_variable;
-
-      //Регистр обнаружения хранит номер позиции в таблице обнаружения для поиска ключевых слов
-      int register_detection;
-
-      //Регистр значения хранит значения лексем
-      int register_value = -1;
-
-      //Номер строки хранит номер текущей строки в программе
-      int number_line = 1;
-
-      //Флаг остановки
-      bool stop = false;
-
-      //Переменная для M1
-      int tempforswitchinM1;
-
-
-
-      int state = A1;
 
       while (!stop)
       {
          int character = in.get();
-         SymbolicToken token = Transliterator(character);
+         token = Transliterator(character);
 
          switch (state)
          {
@@ -634,30 +804,17 @@ public:
             {
             case (TokenType::LETTER)://B1a
 
-               register_detection = Find_In_Array_table_first_vector(get<0>(token.value));
-               if (register_detection == -1)
-               {
-                  Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               }
-
-               state = B1;
+               B1a();
                break;
 
             case (TokenType::ARITHMETIC_OPERATION)://C1a
 
-               register_type_token = TokenType::ARITHMETIC_OPERATION;
-               register_value = get<0>(token.value);
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = C1;
+               C1a();
                break;
 
             case (TokenType::RELATION)://D1a
 
-               register_type_token = TokenType::RELATION;
-               register_relation = get<0>(token.value);
-
-               state = D1;
+               D1a();
                break;
 
             case (TokenType::SPACE)://A1
@@ -667,16 +824,12 @@ public:
 
             case (TokenType::LF)://A1b
 
-               number_line++;
-
-               state = A1;
+               A1b();
                break;
 
             case (TokenType::SEMI_COLON)://I1a
 
-               register_type_token = TokenType::COMMENT;
-
-               state = I1;
+               I1a();
                break;
 
             default:
@@ -693,30 +846,17 @@ public:
             {
             case (TokenType::LETTER)://B1a
 
-               register_detection = Find_In_Array_table_first_vector(get<0>(token.value));
-               if (register_detection == -1)
-               {
-                  Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               }
-
-               state = B1;
+               B1a();
                break;
 
             case (TokenType::ARITHMETIC_OPERATION)://C1a
 
-               register_type_token = TokenType::ARITHMETIC_OPERATION;
-               register_value = get<0>(token.value);
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = C1;
+               C1a();
                break;
 
             case (TokenType::RELATION)://D1a
 
-               register_type_token = TokenType::RELATION;
-               register_relation = get<0>(token.value);
-
-               state = D1;
+               D1a();
                break;
 
             case (TokenType::SPACE)://A2
@@ -726,26 +866,17 @@ public:
 
             case (TokenType::LF)://A2c
 
-               Add_Constant(register_number, register_indicator, register_value);
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               number_line++;
-
-               state = A2;
+               A2c();
                break;
 
             case (TokenType::SEMI_COLON)://I2a
 
-               register_type_token = TokenType::COMMENT;
-
-               state = I2;
+               I2a();
                break;
 
             case (TokenType::END)://EXIT1
 
-               register_type_token = TokenType::END_MARKER;
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = Stop;
+               EXIT1();
                break;
 
             default:
@@ -762,95 +893,12 @@ public:
             {
             case (TokenType::LETTER)://M1
 
-               tempforswitchinM1 = table_detection.table_detection[register_detection][1];
-               if (table_detection.table_detection[register_detection][0] != get<0>(token.value))
-               {
-                  if (table_detection.table_detection[register_detection][2] != -1 && table_detection.table_detection[table_detection.table_detection[register_detection][2]][0] == get<0>(token.value))
-                  {
-                     tempforswitchinM1 = table_detection.table_detection[table_detection.table_detection[register_detection][2]][1];
-                     register_detection = table_detection.table_detection[register_detection][2];
-                  }
-                  else
-                  {
-                     Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-                     break;
-                  }
-               }
-
-               switch (tempforswitchinM1)
-               {
-               case(table_detection.B1b)://B1b
-
-                  register_detection++;
-
-                  state = B1;
-                  break;
-
-               case(table_detection.C1b)://C1b
-
-                  register_type_token = TokenType::END;
-                  Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-                  state = C1;
-                  break;
-
-               case(table_detection.C1c)://C1c
-
-                  register_type_token = TokenType::READ;
-                  Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-                  state = C1;
-                  break;
-
-               case(table_detection.C1d)://C1d
-
-                  register_type_token = TokenType::WRITE;
-                  Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-                  state = C1;
-                  break;
-
-               case(table_detection.E1a)://E1a
-
-                  register_type_token = TokenType::PUSH;
-
-                  state = E1;
-                  break;
-
-               case(table_detection.E2a)://E2a
-
-                  register_type_token = TokenType::JI;
-
-                  state = E2;
-                  break;
-
-               case(table_detection.E2b)://E2b
-
-                  register_type_token = TokenType::JMP;
-
-                  state = E2;
-                  break;
-
-               case(table_detection.E3a)://E3a
-
-                  register_type_token = TokenType::POP;
-
-                  state = E3;
-                  break;
-
-               default:
-                  state = Stop;
-                  Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-                  break;
-               }
+               M1();
                break;
 
             case (TokenType::LF)://A2f
 
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               number_line++;
-
-               state = A2;
+               A2f();
                break;
 
             default:
@@ -872,24 +920,17 @@ public:
 
             case (TokenType::LF)://A2a
 
-               number_line++;
-
-               state = A2;
+               A2a();
                break;
 
             case (TokenType::SEMI_COLON)://I2a
 
-               register_type_token = TokenType::COMMENT;
-
-               state = I2;
+               I2a();
                break;
 
             case (TokenType::END)://EXIT1
 
-               register_type_token = TokenType::END_MARKER;
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = Stop;
+               EXIT1();
                break;
 
             default:
@@ -906,73 +947,27 @@ public:
             {
             case (TokenType::RELATION)://C1h
 
-               if (get<0>(token.value) != Equal)
-               {
-                  Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-                  state = C1;
-                  break;
-               }
-               if (register_relation >= Not && register_relation <= More)
-                  register_relation += 3;//Not + 3 = Not_equal, Less + 3 = Less_or_equal, More + 3 = More_or_equal
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = C1;
+               C1h();
                break;
 
             case (TokenType::SPACE)://C1g
 
-               if (register_relation == Not)
-               {
-                  Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-                  state = C1;
-                  break;
-               }
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = C1;
+               C1g();
                break;
 
             case (TokenType::LF)://A2e
 
-               if (register_relation == Not)
-               {
-                  Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-                  state = A2;
-                  break;
-               }
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               number_line++;
-
-               state = A2;
+               A2e();
                break;
 
             case (TokenType::SEMI_COLON)://I2d
 
-               if (register_relation == Not)
-               {
-                  Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-                  state = I2;
-                  break;
-               }
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               register_type_token = TokenType::COMMENT;
-
-               state = I2;
+               I2d();
                break;
 
             case (TokenType::END)://EXIT2
 
-               if (register_relation == Not)
-               {
-                  Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-                  state = Stop;
-                  break;
-               }
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               register_type_token = TokenType::END_MARKER;
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = Stop;
+               EXIT2();
                break;
 
             default:
@@ -994,10 +989,7 @@ public:
 
             case (TokenType::LF)://A2f
 
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               number_line++;
-
-               state = A2;
+               A2f();
                break;
 
             default:
@@ -1019,10 +1011,7 @@ public:
 
             case (TokenType::LF)://A2f
 
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               number_line++;
-
-               state = A2;
+               A2f();
                break;
 
             default:
@@ -1044,10 +1033,7 @@ public:
 
             case (TokenType::LF)://A2f
 
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               number_line++;
-
-               state = A2;
+               A2f();
                break;
 
             default:
@@ -1064,16 +1050,12 @@ public:
             {
             case (TokenType::LETTER)://H1a
 
-               register_variable = get<0>(token.value);
-
-               state = H1;
+               H1a();
                break;
 
             case (TokenType::DIGIT)://G1a
 
-               register_number = get<0>(token.value);
-
-               state = G1;
+               G1a();
                break;
 
             case (TokenType::SPACE)://F1
@@ -1083,10 +1065,7 @@ public:
 
             case (TokenType::LF)://A2f
 
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               number_line++;
-
-               state = A2;
+               A2f();
                break;
 
             default:
@@ -1103,9 +1082,7 @@ public:
             {
             case (TokenType::DIGIT)://G1a
 
-               register_number = get<0>(token.value);
-
-               state = G1;
+               G1a();
                break;
 
             case (TokenType::SPACE)://F2
@@ -1115,10 +1092,7 @@ public:
 
             case (TokenType::LF)://A2f
 
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               number_line++;
-
-               state = A2;
+               A2f();
                break;
 
             default:
@@ -1135,9 +1109,7 @@ public:
             {
             case (TokenType::LETTER)://H1a
 
-               register_variable = get<0>(token.value);
-
-               state = H1;
+               H1a();
                break;
 
             case (TokenType::SPACE)://F3
@@ -1147,10 +1119,7 @@ public:
 
             case (TokenType::LF)://A2f
 
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               number_line++;
-
-               state = A2;
+               A2f();
                break;
 
             default:
@@ -1167,46 +1136,27 @@ public:
             {
             case (TokenType::DIGIT)://G1b
 
-               register_number *= 10;
-               register_number += get<0>(token.value);
-
-               state = G1;
+               G1b();
                break;
 
             case (TokenType::SPACE)://C1e
 
-               Add_Constant(register_number, register_indicator, register_value);
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = C1;
+               C1e();
                break;
 
             case (TokenType::LF)://A2c
 
-               Add_Constant(register_number, register_indicator, register_value);
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               number_line++;
-
-               state = A2;
+               A2c();
                break;
 
             case (TokenType::SEMI_COLON)://I2b
 
-               Add_Constant(register_number, register_indicator, register_value);
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               register_type_token = TokenType::COMMENT;
-
-               state = I2;
+               I2b();
                break;
 
             case (TokenType::END)://EXIT3
 
-               Add_Constant(register_number, register_indicator, register_value);
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               register_type_token = TokenType::END_MARKER;
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = Stop;
+               EXIT3();
                break;
 
             default:
@@ -1223,52 +1173,32 @@ public:
             {
             case (TokenType::LETTER)://H1b
 
-               register_variable.push_back(get<0>(token.value));
-
-               state = H1;
+               H1b();
                break;
 
             case (TokenType::DIGIT)://H1b
 
-               register_variable.push_back(get<0>(token.value));
-
-               state = H1;
+               H1b();
                break;
 
             case (TokenType::SPACE)://C1f
 
-               Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = C1;
+               C1f();
                break;
 
             case (TokenType::LF)://A2d
 
-               Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               number_line++;
-
-               state = A2;
+               A2d();
                break;
 
             case (TokenType::SEMI_COLON)://I2c
 
-               Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               register_type_token = TokenType::COMMENT;
-
-               state = I2;
+               I2c();
                break;
 
             case (TokenType::END)://EXIT4
 
-               Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               register_type_token = TokenType::END_MARKER;
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = Stop;
+               EXIT4();
                break;
 
             default:
@@ -1311,10 +1241,7 @@ public:
 
             case (TokenType::LF)://A1a
 
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               number_line++;
-
-               state = A1;
+               A1a();
                break;
 
             case(TokenType::SEMI_COLON)://I1
@@ -1366,10 +1293,7 @@ public:
 
             case(TokenType::LF)://A2b
 
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-               number_line++;
-
-               state = A2;
+               A2b();
                break;
 
             case(TokenType::SEMI_COLON)://I2
@@ -1384,10 +1308,7 @@ public:
 
             case(TokenType::END)://EXIT1
 
-               register_type_token = TokenType::END_MARKER;
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = Stop;
+               EXIT1();
                break;
 
             default:
@@ -1429,9 +1350,7 @@ public:
 
             case (TokenType::LF)://A2a
 
-               number_line++;
-
-               state = A2;
+               A2a();
                break;
 
             case (TokenType::SEMI_COLON)://J1
@@ -1446,10 +1365,7 @@ public:
 
             case (TokenType::END)://EXIT1
 
-               register_type_token = TokenType::END_MARKER;
-               Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
-
-               state = Stop;
+               EXIT1();
                break;
 
             default:
@@ -1469,9 +1385,9 @@ public:
             Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
             break;
          }
-
       }
 
+
       return table_tokens;
-   };
+   }
 }; 
