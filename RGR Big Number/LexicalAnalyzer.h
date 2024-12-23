@@ -97,23 +97,9 @@ struct SymbolicToken
    int number_line;
 };
 
-struct TableConst
-{
-   int* array;
-   int size;
-   int capacity;
-};
-
-struct TableVariable
-{
-   string* array;
-   int size;
-   int capacity;
-};
-
 struct KeywordDetection
 {
-   vector<vector<int>> table_first_vector =
+   vector<vector<int>> table_first_vector
    {
       {(int)'e', 0 },
       {(int)'j', 2 },
@@ -157,7 +143,7 @@ struct KeywordDetection
 };
 
 //Таблица констант
-vector<int*> table_constants;
+vector<int> table_constants;
 
 //Таблица переменных
 vector<string> table_variable;
@@ -179,51 +165,23 @@ public:
          cout << TokenTypeString[table_tokens[i].token_class] << " ";
          if (table_tokens[i].token_class == TokenType::ARITHMETIC_OPERATION)
          {
-            cout << get<2>(table_tokens[i].value);
-
-
-            switch (get<0>(table_tokens[i].value))
-            {
-            case ('+'):
-               cout << '+';
-               break;
-
-            case('-'):
-               cout << '-';
-               break;
-
-            case('*'):
-               cout << '*';
-               break;
-
-            case('/'):
-               cout << '/';
-               break;
-
-            case('%'):
-               cout << '%';
-               break;
-
-            default:
-               cout << "opsss..";
-               break;
-            }
+            cout << (char)get<0>(table_tokens[i].value) << " ";
          }
          else if (table_tokens[i].token_class == TokenType::RELATION)
          {
-            cout << RelationString[get<0>(table_tokens[i].value)];
+            cout << RelationString[get<0>(table_tokens[i].value)] << " ";
          }
          else if (table_tokens[i].token_class == TokenType::COMMENT || table_tokens[i].token_class == TokenType::READ ||
             table_tokens[i].token_class == TokenType::WRITE || table_tokens[i].token_class == TokenType::END ||
-            table_tokens[i].token_class == TokenType::END_MARKER)
+            table_tokens[i].token_class == TokenType::END_MARKER || table_tokens[i].token_class == TokenType::ERROR)
             ;//nothing
          else if (table_tokens[i].value.index() == 2)
-            cout << get<2>(table_tokens[i].value);
+            cout << get<2>(table_tokens[i].value) << " ";
          else if (table_tokens[i].value.index() == 1)
-            cout << get<1>(table_tokens[i].value);
+            cout << get<1>(table_tokens[i].value) << " ";//звезда
          else if (table_tokens[i].value.index() == 0)
-            cout << get<0>(table_tokens[i].value);
-         cout << " " << table_tokens[i].number_line << endl;
+            cout << get<0>(table_tokens[i].value) << " ";
+         cout << table_tokens[i].number_line << endl;
       }
    }
 
@@ -241,17 +199,17 @@ public:
       if (character >= 'A' && character <= 'Z' || character >= 'a' && character <= 'z')
       {
          result.token_class = TokenType::LETTER;
-         result.value = character;
+         result.value = (int)character;
       }
       else if (character >= '0' && character <= '9')
       {
          result.token_class = TokenType::DIGIT;
-         result.value = character - '0';
+         result.value = (int)character - '0';
       }
       else if (character == '+' || character == '-' || character == '*' || character == '/' || character == '%')
       {
          result.token_class = TokenType::ARITHMETIC_OPERATION;
-         result.value = character;
+         result.value = (int)character;
       }
       else if (character == '<')
       {
@@ -276,33 +234,67 @@ public:
       else if (character == ' ' || character == '\t')
       {
          result.token_class = TokenType::SPACE;
-         result.value = character;
+         result.value = (int)character;
       }
       else if (character == ';')
       {
          result.token_class = TokenType::SEMI_COLON;
-         result.value = character;
+         result.value = (int)character;
       }
       else if (character == '\n')
       {
          result.token_class = TokenType::LF;
-         result.value = character;
+         result.value = (int)character;
       }
       else if (character == EOF)
       {
          result.token_class = TokenType::END;
-         result.value = character;
+         result.value = (int)character;
       }
       else
       {
          result.token_class = TokenType::ERROR;
-         result.value = character;
+         result.value = (int)character;
       }
       return result;
    }
 
+   int Find_In_Array_TableConst(const int register_number)
+   {
+      if (table_constants.empty())
+         return -1;
 
-   
+      for (int i = 0; i < table_constants.size(); i++)
+      {
+         if (table_constants[i] == register_number)
+            return i;
+      }
+      return -1;
+   }
+
+   bool Find_In_Array_TableVariable(const string register_variable)
+   {
+      if (table_variable.empty())
+         return false;
+
+      for (int i = 0; i < table_variable.size(); i++)
+      {
+         if (table_variable[i] == register_variable)
+            return true;
+      }
+      return false;
+   }
+
+   int Find_In_Array_table_first_vector(int character)
+   {
+      KeywordDetection arrays;
+      for (int i = 0; i < 5; i++)
+      {
+         if (arrays.table_first_vector[i][0] == character)
+            return arrays.table_first_vector[i][1];
+      }
+      return -1;
+   }
    
    bool Is_Keyword(string word)
    {
@@ -337,35 +329,37 @@ public:
    //Процедура ДОБАВИТЬ_КОНСТАНТУ
    void Add_Constant(int register_number, variant<int*, string>& register_indicator, int& register_value)
    {
-      if (table_constants.size >= table_constants.capacity)
-      {
-         Expansion_TableConst();
-      }
 
       if (Find_In_Array_TableConst(register_number) == -1)
       {
-         Push_Back_TableConst(register_number);
+         table_constants.push_back(register_number);
       }
       register_value = register_number;
 
-      register_indicator = &table_constants.array[Find_In_Array_TableConst(register_number)];
+      register_indicator = &(table_constants[Find_In_Array_TableConst(register_number)]);
    }
 
    //Процедура СОЗДАТЬ_ЛЕКСЕМУ
    void Create_Token(TokenType& register_type_token, variant<int*, string>& register_indicator, int& register_value, int& register_relation, int& number_line)
    {
       SymbolicToken result;
-
+      
       if (register_type_token == TokenType::RELATION)
          result.value = register_relation;
+      else if (register_type_token == TokenType::ARITHMETIC_OPERATION)
+         result.value = register_value;
       else if (register_indicator.index() == 1)
+      {
          result.value = get<1>(register_indicator);
+      }
       else if (register_indicator.index() == 0)
+      {
          result.value = get<0>(register_indicator);
+      }
       result.token_class = register_type_token;
       result.number_line = number_line;
 
-      Push_Back_TableToken(result);
+      table_tokens.push_back(result);
 
       register_value = -1;
    }
@@ -390,7 +384,7 @@ public:
 
       if (!Find_In_Array_TableVariable(register_variable))
       {
-         Push_Back_TableVariable(register_variable);
+         table_variable.push_back(register_variable);
       }
 
       register_indicator = register_variable;
@@ -401,7 +395,7 @@ public:
    TokenType register_type_token;
 
    //Регистр указателя содержит указатель на таблицу имён для лексем PUSH и POP
-   variant<int*, string> register_indicator = nullptr;
+   variant<int*, string> register_indicator;
 
    //Регистр числа используется для вычисления констант
    int register_number;
@@ -512,14 +506,20 @@ public:
       state = B1;
    }
 
+   //B1b
+
    void C1a()
    {
       register_type_token = TokenType::ARITHMETIC_OPERATION;
-      register_value = get<0>(token.value);
+      register_value = (int)get<0>(token.value);
       Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
 
       state = C1;
    }
+
+   //C1b
+   //C1c
+   //C1d
 
    void C1e()
    {
@@ -572,6 +572,11 @@ public:
 
       state = D1;
    }
+
+   //E1a
+   //E2a
+   //E2b
+   //E3a
 
    void G1a()
    {
@@ -693,6 +698,8 @@ public:
 
    void M1()
    {
+      if (register_detection == -1)
+         return;
       tempforswitchinM1 = table_detection.table_detection[register_detection][1];
       if (table_detection.table_detection[register_detection][0] != get<0>(token.value))
       {
@@ -778,7 +785,7 @@ public:
 
 
 
-   TableToken Lexical_Analyzer(const char* filename)
+   vector<SymbolicToken> Lexical_Analyzer(const char* filename)
    {
       ifstream in(filename);
       if (!in)
@@ -786,8 +793,6 @@ public:
          cout << "Не удалось открыть файл " << filename << endl;
          throw "Error";
       }
-
-      table_constants.array = nullptr;
 
 
       while (!stop)
@@ -864,9 +869,9 @@ public:
                state = A2;
                break;
 
-            case (TokenType::LF)://A2c
+            case (TokenType::LF)://A2a
 
-               A2c();
+               A2a();
                break;
 
             case (TokenType::SEMI_COLON)://I2a

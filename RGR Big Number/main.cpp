@@ -5,9 +5,11 @@
 
 int main()
 {
-   Lexical_Analyzer("input3.txt");
+   
 
-   TableToken tokens(table_tokens);
+   TableToken tokens;
+
+   tokens.Lexical_Analyzer("input7.txt");
 
    tokens.Print();
 
