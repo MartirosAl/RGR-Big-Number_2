@@ -5,7 +5,7 @@
 
 int main()
 {
-   Lexical_Analyzer("input8.txt");
+   Lexical_Analyzer("input3.txt");
 
    TableToken tokens(table_tokens);
 
