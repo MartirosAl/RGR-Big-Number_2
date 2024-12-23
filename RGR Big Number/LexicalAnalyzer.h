@@ -327,7 +327,7 @@ public:
    }
 
    //Ïğîöåäóğà ÄÎÁÀÂÈÒÜ_ÊÎÍÑÒÀÍÒÓ
-   void Add_Constant(int register_number, variant<int*, string>& register_indicator, int& register_value)
+   void Add_Constant()
    {
 
       if (Find_In_Array_TableConst(register_number) == -1)
@@ -340,7 +340,7 @@ public:
    }
 
    //Ïğîöåäóğà ÑÎÇÄÀÒÜ_ËÅÊÑÅÌÓ
-   void Create_Token(TokenType& register_type_token, variant<int*, string>& register_indicator, int& register_value, int& register_relation, int& number_line)
+   void Create_Token()
    {
       SymbolicToken result;
       
@@ -365,20 +365,20 @@ public:
    }
 
    //Ïğîöåäóğà îáğàáîòêè îøèáîê
-   void Error_Handler(TokenType& register_type_token, variant<int*, string>& register_indicator, int& register_value, int& register_relation, int& number_line, int& state)
+   void Error_Handler()
    {
       register_type_token = TokenType::ERROR;
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
       cerr << "An error was found in the number line " << number_line << endl;
       state = J1;
    }
 
    //Ïğîöåäóğà ÄÎÁÀÂÈÒÜ_ÏÅĞÅÌÅÍÍÓŞ
-   void Add_Variable(string register_variable, TokenType& register_type_token, variant<int*, string>& register_indicator, int& register_value, int& register_relation, int& number_line, int& state)
+   void Add_Variable()
    {
       if (Is_Keyword(register_variable))
       {
-         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         Error_Handler();
          return;
       }
 
@@ -427,7 +427,7 @@ public:
 
    void A1a()
    {
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
       number_line++;
 
       state = A1;
@@ -449,7 +449,7 @@ public:
 
    void A2b()
    {
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
       number_line++;
 
       state = A2;
@@ -457,8 +457,8 @@ public:
 
    void A2c()
    {
-      Add_Constant(register_number, register_indicator, register_value);
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Add_Constant();
+      Create_Token();
       number_line++;
 
       state = A2;
@@ -466,8 +466,8 @@ public:
 
    void A2d()
    {
-      Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Add_Variable();
+      Create_Token();
       number_line++;
 
       state = A2;
@@ -477,11 +477,11 @@ public:
    {
       if (register_relation == Not)
       {
-         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         Error_Handler();
          state = A2;
          return;
       }
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
       number_line++;
 
       state = A2;
@@ -489,7 +489,7 @@ public:
 
    void A2f()
    {
-      Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+      Error_Handler();
       number_line++;
 
       state = A2;
@@ -500,7 +500,7 @@ public:
       register_detection = Find_In_Array_table_first_vector(get<0>(token.value));
       if (register_detection == -1)
       {
-         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         Error_Handler();
       }
 
       state = B1;
@@ -512,7 +512,7 @@ public:
    {
       register_type_token = TokenType::ARITHMETIC_OPERATION;
       register_value = (int)get<0>(token.value);
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
 
       state = C1;
    }
@@ -523,16 +523,16 @@ public:
 
    void C1e()
    {
-      Add_Constant(register_number, register_indicator, register_value);
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Add_Constant();
+      Create_Token();
 
       state = C1;
    }
 
    void C1f()
    {
-      Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Add_Variable();
+      Create_Token();
 
       state = C1;
    }
@@ -541,11 +541,11 @@ public:
    {
       if (register_relation == Not)
       {
-         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         Error_Handler();
          state = C1;
          return;
       }
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
 
       state = C1;
    }
@@ -554,13 +554,13 @@ public:
    {
       if (get<0>(token.value) != Equal)
       {
-         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         Error_Handler();
          state = C1;
          return;
       }
       if (register_relation >= Not && register_relation <= More)
          register_relation += 3;//Not + 3 = Not_equal, Less + 3 = Less_or_equal, More + 3 = More_or_equal
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
 
       state = C1;
    }
@@ -623,8 +623,8 @@ public:
 
    void I2b()
    {
-      Add_Constant(register_number, register_indicator, register_value);
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Add_Constant();
+      Create_Token();
       register_type_token = TokenType::COMMENT;
 
       state = I2;
@@ -632,8 +632,8 @@ public:
 
    void I2c()
    {
-      Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Add_Variable();
+      Create_Token();
       register_type_token = TokenType::COMMENT;
 
       state = I2;
@@ -643,11 +643,11 @@ public:
    {
       if (register_relation == Not)
       {
-         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         Error_Handler();
          state = I2;
          return;
       }
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
       register_type_token = TokenType::COMMENT;
 
       state = I2;
@@ -656,7 +656,7 @@ public:
    void EXIT1()
    {
       register_type_token = TokenType::END_MARKER;
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
 
       state = Stop;
    }
@@ -665,33 +665,33 @@ public:
    {
       if (register_relation == Not)
       {
-         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         Error_Handler();
          state = Stop;
          return;
       }
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
       register_type_token = TokenType::END_MARKER;
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
 
       state = Stop;
    }
 
    void EXIT3()
    {
-      Add_Constant(register_number, register_indicator, register_value);
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Add_Constant();
+      Create_Token();
       register_type_token = TokenType::END_MARKER;
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
 
       state = Stop;
    }
 
    void EXIT4()
    {
-      Add_Variable(register_variable, register_type_token, register_indicator, register_value, register_relation, number_line, state);
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Add_Variable();
+      Create_Token();
       register_type_token = TokenType::END_MARKER;
-      Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+      Create_Token();
 
       state = Stop;
    }
@@ -710,7 +710,7 @@ public:
          }
          else
          {
-            Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+            Error_Handler();
             return;
          }
       }
@@ -727,7 +727,7 @@ public:
       case(table_detection.C1b)://C1b
 
          register_type_token = TokenType::END;
-         Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+         Create_Token();
 
          state = C1;
          break;
@@ -735,7 +735,7 @@ public:
       case(table_detection.C1c)://C1c
 
          register_type_token = TokenType::READ;
-         Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+         Create_Token();
 
          state = C1;
          break;
@@ -743,7 +743,7 @@ public:
       case(table_detection.C1d)://C1d
 
          register_type_token = TokenType::WRITE;
-         Create_Token(register_type_token, register_indicator, register_value, register_relation, number_line);
+         Create_Token();
 
          state = C1;
          break;
@@ -778,7 +778,7 @@ public:
 
       default:
          state = Stop;
-         Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+         Error_Handler();
          break;
       }
    }
@@ -839,7 +839,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -886,7 +886,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -908,7 +908,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -940,7 +940,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -977,7 +977,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -999,7 +999,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -1021,7 +1021,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -1043,7 +1043,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -1075,7 +1075,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -1102,7 +1102,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -1129,7 +1129,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -1166,7 +1166,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -1208,7 +1208,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -1261,7 +1261,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -1318,7 +1318,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -1375,7 +1375,7 @@ public:
 
             default:
                state = Stop;
-               Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+               Error_Handler();
                break;
             }
             break;
@@ -1387,7 +1387,7 @@ public:
 
          default:
             state = Stop;
-            Error_Handler(register_type_token, register_indicator, register_value, register_relation, number_line, state);
+            Error_Handler();
             break;
          }
       }
