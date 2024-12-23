@@ -5,6 +5,7 @@
 #include <vector>
 #include <variant>
 #include <map>
+#include <set>
 using namespace std;
 
 
@@ -93,7 +94,7 @@ vector<string> RelationString
 struct SymbolicToken
 {
    TokenType token_class;
-   variant<int, int*, string> value;
+   variant<int, string> value;
    int number_line;
 };
 
@@ -143,7 +144,7 @@ struct KeywordDetection
 };
 
 //Таблица констант
-vector<int> table_constants;
+set<int> table_constants;
 
 //Таблица переменных
 vector<string> table_variable;
@@ -175,10 +176,8 @@ public:
             table_tokens[i].token_class == TokenType::WRITE || table_tokens[i].token_class == TokenType::END ||
             table_tokens[i].token_class == TokenType::END_MARKER || table_tokens[i].token_class == TokenType::ERROR)
             ;//nothing
-         else if (table_tokens[i].value.index() == 2)
-            cout << get<2>(table_tokens[i].value) << " ";
          else if (table_tokens[i].value.index() == 1)
-            cout << get<1>(table_tokens[i].value) << " ";//звезда
+            cout << get<1>(table_tokens[i].value) << " ";
          else if (table_tokens[i].value.index() == 0)
             cout << get<0>(table_tokens[i].value) << " ";
          cout << table_tokens[i].number_line << endl;
@@ -259,19 +258,6 @@ public:
       return result;
    }
 
-   int Find_In_Array_TableConst(const int register_number)
-   {
-      if (table_constants.empty())
-         return -1;
-
-      for (int i = 0; i < table_constants.size(); i++)
-      {
-         if (table_constants[i] == register_number)
-            return i;
-      }
-      return -1;
-   }
-
    bool Find_In_Array_TableVariable(const string register_variable)
    {
       if (table_variable.empty())
@@ -329,14 +315,11 @@ public:
    //Процедура ДОБАВИТЬ_КОНСТАНТУ
    void Add_Constant()
    {
+      table_constants.emplace(register_number);
 
-      if (Find_In_Array_TableConst(register_number) == -1)
-      {
-         table_constants.push_back(register_number);
-      }
       register_value = register_number;
 
-      register_indicator = &(table_constants[Find_In_Array_TableConst(register_number)]);
+      register_indicator = register_number;
    }
 
    //Процедура СОЗДАТЬ_ЛЕКСЕМУ
@@ -395,7 +378,7 @@ public:
    TokenType register_type_token;
 
    //Регистр указателя содержит указатель на таблицу имён для лексем PUSH и POP
-   variant<int*, string> register_indicator;
+   variant<int, string> register_indicator;
 
    //Регистр числа используется для вычисления констант
    int register_number;
@@ -666,8 +649,7 @@ public:
 
       if (register_relation == Not)
       {
-         Error_Handler();
-         return;
+         register_type_token = TokenType::ERROR;
       }
       Create_Token();
       register_type_token = TokenType::END_MARKER;
