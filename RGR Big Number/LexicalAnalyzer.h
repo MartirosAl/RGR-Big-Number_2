@@ -475,16 +475,16 @@ public:
    
    void A2e()
    {
+      state = A2;
+
       if (register_relation == Not)
       {
          Error_Handler();
-         state = A2;
          return;
       }
       Create_Token();
       number_line++;
 
-      state = A2;
    }
 
    void A2f()
@@ -539,30 +539,29 @@ public:
 
    void C1g()
    {
+      state = C1;
+      
       if (register_relation == Not)
       {
          Error_Handler();
-         state = C1;
          return;
       }
       Create_Token();
 
-      state = C1;
    }
 
    void C1h()
    {
+      state = C1;
+
       if (get<0>(token.value) != Equal)
       {
          Error_Handler();
-         state = C1;
          return;
       }
       if (register_relation >= Not && register_relation <= More)
          register_relation += 3;//Not + 3 = Not_equal, Less + 3 = Less_or_equal, More + 3 = More_or_equal
       Create_Token();
-
-      state = C1;
    }
 
    void D1a()
@@ -641,16 +640,16 @@ public:
 
    void I2d()
    {
+      state = I2;
+      
       if (register_relation == Not)
       {
          Error_Handler();
-         state = I2;
          return;
       }
       Create_Token();
       register_type_token = TokenType::COMMENT;
 
-      state = I2;
    }
 
    void EXIT1()
@@ -663,17 +662,16 @@ public:
 
    void EXIT2()
    {
+      state = Stop;
+
       if (register_relation == Not)
       {
          Error_Handler();
-         state = Stop;
          return;
       }
       Create_Token();
       register_type_token = TokenType::END_MARKER;
       Create_Token();
-
-      state = Stop;
    }
 
    void EXIT3()
