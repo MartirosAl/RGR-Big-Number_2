@@ -7,7 +7,10 @@ void TableToken::JUMP(int& number_token)
    for (int x = 0; x < table_tokens.size(); x++)
    {
       if (table_tokens[x].number_line == *get<1>(table_tokens[number_token].value))
-         number_token = table_tokens[x].number_line;
+      {
+         number_token = x - 1;// остыль внутри for станет нужным значением
+         return;
+      }
    }
 }
 
@@ -187,7 +190,7 @@ void TableToken::Interpreter(stack<int>& stack_)
             return;
          }
 
-         cout << stack_.top();
+         cout << stack_.top() << endl;
          stack_.pop();
 
          counter_stack--;

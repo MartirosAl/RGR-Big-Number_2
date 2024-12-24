@@ -782,9 +782,9 @@ public:
       }
    }
 
-   //кейяхвеяйхи юмюкхгюрнп//
+   //кейяхвеяйхи юмюкхгюрнп ДКЪ int//
 
-   vector<SymbolicToken> Lexical_Analyzer(const char* filename)
+   vector<SymbolicToken> Lexical_Analyzer_int(const char* filename)
    {
       ifstream in(filename);
       if (!in)

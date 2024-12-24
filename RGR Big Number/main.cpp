@@ -6,14 +6,10 @@
 
 int main()
 {
-   
-   BigNumber m;
-
-   m.Get_Capacity();
 
    TableToken tokens;
 
-   tokens.Lexical_Analyzer("input3.txt");
+   tokens.Lexical_Analyzer_int("input7.txt");
 
    tokens.Print();
 
