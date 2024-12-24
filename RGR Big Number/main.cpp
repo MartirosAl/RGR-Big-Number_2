@@ -1,6 +1,7 @@
 #include <iostream>
 #include "BigNumber.h"
 #include "LexicalAnalyzer.h"
+#include "Interpreter.h"
 
 
 int main()
@@ -12,10 +13,13 @@ int main()
 
    TableToken tokens;
 
-   tokens.Lexical_Analyzer("input6.txt");
+   tokens.Lexical_Analyzer("input3.txt");
 
    tokens.Print();
 
+   stack<int> stack_int;
+
+   tokens.Interpreter(stack_int);
    
 
    return 0;

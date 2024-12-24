@@ -1,8 +1,8 @@
 #pragma once
-#include <stack>
 #include "LexicalAnalyzer.h"
 
-void JMP(int& number_token)
+
+void TableToken::JUMP(int& number_token)
 {
    for (int x = 0; x < table_tokens.size(); x++)
    {
@@ -11,7 +11,7 @@ void JMP(int& number_token)
    }
 }
 
-void Interpreter(stack<int>& stack_)
+void TableToken::Interpreter(stack<int>& stack_)
 {
    //Проверка на наличее ERROR
    for (int i = 0; i < table_tokens.size(); i++)
@@ -30,6 +30,8 @@ void Interpreter(stack<int>& stack_)
    int temp_var1 = 0;
    int temp_var2 = 0;
 
+
+   
    for (int number_token = 0; number_token < table_tokens.size(); number_token++)
    {
       switch (table_tokens[number_token].token_class)
@@ -37,7 +39,10 @@ void Interpreter(stack<int>& stack_)
       case (TokenType::PUSH):
 
          if (table_tokens[number_token].value.index() == 2)
-            stack_.push(get<2>(table_tokens[number_token].value)->second);
+         {
+            temp_var1 = get<2>(table_tokens[number_token].value)->second;
+            stack_.push(temp_var1);
+         }
          else
             if (table_tokens[number_token].value.index() == 1)
                stack_.push(*get<1>(table_tokens[number_token].value));
@@ -56,8 +61,8 @@ void Interpreter(stack<int>& stack_)
          name_variable = get<2>(table_tokens[number_token].value)->first;
          value_variable = stack_.top();
          stack_.pop();
-         table_variable.erase(get<2>(table_tokens[number_token].value));
-         table_variable.insert({ name_variable, value_variable });
+
+         (get<2>(table_tokens[number_token].value)->second) = value_variable;
 
          counter_stack--;
          break;
@@ -95,6 +100,10 @@ void Interpreter(stack<int>& stack_)
             stack_.push(temp_var2 / temp_var1);
             break;
          case ('%'):
+            if (temp_var1 == 0)
+            {
+               cerr << "Arithmetic error";
+            }
             stack_.push(temp_var2 % temp_var1);
             break;
          }
@@ -142,7 +151,7 @@ void Interpreter(stack<int>& stack_)
 
       case(TokenType::JMP):
       
-         JMP(number_token);
+         JUMP(number_token);
          break;
       
       case(TokenType::JI):
@@ -156,15 +165,16 @@ void Interpreter(stack<int>& stack_)
          temp_var1 = stack_.top();
          stack_.pop();
          if (temp_var1)
-            JMP(number_token);
+            JUMP(number_token);
 
          counter_stack--;
          break;
   
       case(TokenType::READ):
 
-         stack_.push(temp_var1);
          cin >> temp_var1;
+         stack_.push(temp_var1);
+         
 
          counter_stack++;
          break;

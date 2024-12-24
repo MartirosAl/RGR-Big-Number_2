@@ -7,158 +7,170 @@
 #include <variant>
 #include <map>
 #include <set>
+#include <stack>
 using namespace std;
-
-
-
-enum TokenType
-{
-   start = -1,
-   LETTER,
-   DIGIT,
-   ARITHMETIC_OPERATION,
-   RELATION,
-   SPACE,
-   LF,
-   SEMI_COLON,
-   COMMENT,
-   ERROR,
-   PUSH,
-   POP,
-   JMP,
-   JI,
-   READ,
-   WRITE,
-   END,
-   END_MARKER
-};
-
-vector<string> TokenTypeString =
-{
-   "LETTER",
-   "DIGIT",
-   "ARITHMETIC_OPERATION",
-   "RELATION",
-   "SPACE",
-   "LF",
-   "SEMI_COLON",
-   "COMMENT",
-   "ERROR",
-   "PUSH",
-   "POP",
-   "JMP",
-   "JI",
-   "READ",
-   "WRITE",
-   "END",
-   "END_MARKER"
-};
-
-enum States
-{
-   A1, A2,
-   B1,
-   C1,
-   D1,
-   E1, E2, E3,
-   F1, F2, F3,
-   G1,
-   H1,
-   I1, I2,
-   J1,
-   Stop,
-   M1
-};
-
-enum Relation
-{
-   Equal,
-   Not,
-   Less_then,
-   More_then,
-   Not_equal,
-   Less_or_equal_then,
-   More_or_equal_then
-};
-
-vector<string> RelationString
-{
-   "Equal",
-   "Not",
-   "Less_then",
-   "More_then",
-   "Not_equal",
-   "Less_or_equal_then",
-   "More_or_equal_then"
-};
-
-struct SymbolicToken
-{
-   TokenType token_class;
-   variant<int, set<int>::iterator, map<string, int>::iterator> value;
-   int number_line;
-};
-
-struct KeywordDetection
-{
-   vector<vector<int>> table_first_vector
-   {
-      {(int)'e', 0 },
-      {(int)'j', 2 },
-      {(int)'p', 5 },
-      {(int)'r', 10 },
-      {(int)'w', 13 }
-   };
-
-   vector<vector<int>> table_detection
-   {
-      {(int)'n', B1b, -1},
-      {(int)'d', C1b, -1},
-      {(int)'i', E2a, 3},
-      {(int)'m', B1b, -1},
-      {(int)'p', E2b, -1},
-      {(int)'o', B1b, 7},
-      {(int)'p', E3a, -1},
-      {(int)'u', B1b, -1},
-      {(int)'s', B1b, -1},
-      {(int)'h', E1a, -1},
-      {(int)'e', B1b, -1},
-      {(int)'a', B1b, -1},
-      {(int)'d', C1c, -1},
-      {(int)'r', B1b, -1},
-      {(int)'i', B1b, -1},
-      {(int)'t', B1b, -1},
-      {(int)'e', C1d, -1}
-   };
-
-   enum Transitions
-   {
-      B1b = M1 + 1,
-      C1b,
-      C1c,
-      C1d,
-      E1a,
-      E2a,
-      E2b,
-      E3a
-   };
-};
-
-//Таблица констант
-set<int> table_constants;
-
-//Таблица переменных
-map<string, int> table_variable;
-
-//Таблица лексем для вывода
-vector<SymbolicToken> table_tokens;
-
-//Таблицы для обнаружения ключевых слов
-const KeywordDetection table_detection;
 
 class TableToken
 {
 public:
+
+   //ENUMS, STRUCTS, VECTORS//
+
+   enum TokenType
+   {
+      start = -1,
+      LETTER,
+      DIGIT,
+      ARITHMETIC_OPERATION,
+      RELATION,
+      SPACE,
+      LF,
+      SEMI_COLON,
+      COMMENT,
+      ERROR,
+      PUSH,
+      POP,
+      JMP,
+      JI,
+      READ,
+      WRITE,
+      END,
+      END_MARKER
+   };
+
+   vector<string> TokenTypeString
+   {
+      "LETTER",
+      "DIGIT",
+      "ARITHMETIC_OPERATION",
+      "RELATION",
+      "SPACE",
+      "LF",
+      "SEMI_COLON",
+      "COMMENT",
+      "ERROR",
+      "PUSH",
+      "POP",
+      "JMP",
+      "JI",
+      "READ",
+      "WRITE",
+      "END",
+      "END_MARKER"
+   };
+
+   enum States
+   {
+      A1, A2,
+      B1,
+      C1,
+      D1,
+      E1, E2, E3,
+      F1, F2, F3,
+      G1,
+      H1,
+      I1, I2,
+      J1,
+      Stop,
+      M1
+   };
+
+   enum Relation
+   {
+      Equal,
+      Not,
+      Less_then,
+      More_then,
+      Not_equal,
+      Less_or_equal_then,
+      More_or_equal_then
+   };
+
+   vector<string> RelationString
+   {
+      "Equal",
+      "Not",
+      "Less_then",
+      "More_then",
+      "Not_equal",
+      "Less_or_equal_then",
+      "More_or_equal_then"
+   };
+
+   struct SymbolicToken
+   {
+      TokenType token_class;
+      variant<int, set<int>::iterator, map<string, int>::iterator> value;
+      int number_line;
+   };
+
+   struct KeywordDetection
+   {
+      vector<vector<int>> table_first_vector
+      {
+         {(int)'e', 0 },
+         {(int)'j', 2 },
+         {(int)'p', 5 },
+         {(int)'r', 10 },
+         {(int)'w', 13 }
+      };
+
+      vector<vector<int>> table_detection
+      {
+         {(int)'n', B1b, -1},
+         {(int)'d', C1b, -1},
+         {(int)'i', E2a, 3},
+         {(int)'m', B1b, -1},
+         {(int)'p', E2b, -1},
+         {(int)'o', B1b, 7},
+         {(int)'p', E3a, -1},
+         {(int)'u', B1b, -1},
+         {(int)'s', B1b, -1},
+         {(int)'h', E1a, -1},
+         {(int)'e', B1b, -1},
+         {(int)'a', B1b, -1},
+         {(int)'d', C1c, -1},
+         {(int)'r', B1b, -1},
+         {(int)'i', B1b, -1},
+         {(int)'t', B1b, -1},
+         {(int)'e', C1d, -1}
+      };
+
+      enum Transitions
+      {
+         B1b = M1 + 1,
+         C1b,
+         C1c,
+         C1d,
+         E1a,
+         E2a,
+         E2b,
+         E3a
+      };
+   };
+
+   //ТАБЛИЦЫ//
+
+   //Таблица констант
+   set<int> table_constants;
+
+   //Таблица переменных
+   map<string, int> table_variable;
+
+   //Таблица лексем для вывода
+   vector<SymbolicToken> table_tokens;
+
+   //Таблицы для обнаружения ключевых слов
+   const KeywordDetection table_detection;
+
+
+   //ИНТЕРПРИТАТОР//
+
+   void JUMP(int& number_token);
+
+   void Interpreter(stack<int>& stack_);
+
+   //ФУНЦКИИ//
 
    void Print()
    {
@@ -370,6 +382,7 @@ public:
 
    
 
+   //ПЕРЕМЕННЫЕ//
 
    //Регистр класса служит для хранения класса лексемы
    TokenType register_type_token;
@@ -404,6 +417,8 @@ public:
    int state = A1;
 
    SymbolicToken token;
+
+   //КОМАНДЫ//
 
    void A1a()
    {
@@ -633,7 +648,6 @@ public:
 
    void EXIT1()
    {
-      Create_Token();
       register_type_token = TokenType::END_MARKER;
       Create_Token();
 
@@ -682,7 +696,7 @@ public:
       state = Stop;
    }
 
-   void M1()
+   void M_1()
    {
       if (register_detection == -1)
          return;
@@ -768,7 +782,7 @@ public:
       }
    }
 
-
+   //ЛЕКСИЧЕСКИЙ АНАЛИЗАТОР//
 
    vector<SymbolicToken> Lexical_Analyzer(const char* filename)
    {
@@ -881,7 +895,7 @@ public:
             {
             case (TokenType::LETTER)://M1
 
-               M1();
+               M_1();
                break;
 
             case (TokenType::LF)://A2f
@@ -1231,6 +1245,11 @@ public:
                state = I1;
                break;
 
+            case(TokenType::END)://EXIT1
+
+               EXIT5();
+               break;
+
             default:
                Error_Handler();
                break;
@@ -1284,7 +1303,7 @@ public:
 
             case(TokenType::END)://EXIT1
 
-               EXIT1();
+               EXIT5();
                break;
 
             default:
@@ -1361,4 +1380,4 @@ public:
       }
       return table_tokens;
    }
-}; 
+};
