@@ -1,4 +1,5 @@
 #pragma once
+#include "BigNumber.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -73,28 +74,28 @@ enum Relation
 {
    Equal,
    Not,
-   Less,
-   More,
+   Less_then,
+   More_then,
    Not_equal,
-   Less_or_equal,
-   More_or_equal
+   Less_or_equal_then,
+   More_or_equal_then
 };
 
 vector<string> RelationString
 {
    "Equal",
    "Not",
-   "Less",
-   "More",
+   "Less_then",
+   "More_then",
    "Not_equal",
-   "Less_or_equal",
-   "More_or_equal"
+   "Less_or_equal_then",
+   "More_or_equal_then"
 };
 
 struct SymbolicToken
 {
    TokenType token_class;
-   variant<int, string> value;
+   variant<int, set<int>::iterator, map<string, int>::iterator> value;
    int number_line;
 };
 
@@ -147,7 +148,7 @@ struct KeywordDetection
 set<int> table_constants;
 
 //Таблица переменных
-vector<string> table_variable;
+map<string, int> table_variable;
 
 //Таблица лексем для вывода
 vector<SymbolicToken> table_tokens;
@@ -163,7 +164,10 @@ public:
    {
       for (int i = 0; i < table_tokens.size(); i++)
       {
+
+         cout << table_tokens[i].number_line << " ";
          cout << TokenTypeString[table_tokens[i].token_class] << " ";
+         
          if (table_tokens[i].token_class == TokenType::ARITHMETIC_OPERATION)
          {
             cout << (char)get<0>(table_tokens[i].value) << " ";
@@ -176,11 +180,14 @@ public:
             table_tokens[i].token_class == TokenType::WRITE || table_tokens[i].token_class == TokenType::END ||
             table_tokens[i].token_class == TokenType::END_MARKER || table_tokens[i].token_class == TokenType::ERROR)
             ;//nothing
+         else if (table_tokens[i].value.index() == 2)
+            cout << get<0>(*get<2>(table_tokens[i].value)) << " ";
          else if (table_tokens[i].value.index() == 1)
-            cout << get<1>(table_tokens[i].value) << " ";
+            cout << *get<1>(table_tokens[i].value) << " ";
          else if (table_tokens[i].value.index() == 0)
             cout << get<0>(table_tokens[i].value) << " ";
-         cout << table_tokens[i].number_line << endl;
+
+         cout << endl;
       }
    }
 
@@ -213,12 +220,12 @@ public:
       else if (character == '<')
       {
          result.token_class = TokenType::RELATION;
-         result.value = Less;
+         result.value = Less_then;
       }
       else if (character == '>')
       {
          result.token_class = TokenType::RELATION;
-         result.value = More;
+         result.value = More_then;
       }
       else if (character == '=')
       {
@@ -256,19 +263,6 @@ public:
          result.value = (int)character;
       }
       return result;
-   }
-
-   bool Find_In_Array_TableVariable(const string register_variable)
-   {
-      if (table_variable.empty())
-         return false;
-
-      for (int i = 0; i < table_variable.size(); i++)
-      {
-         if (table_variable[i] == register_variable)
-            return true;
-      }
-      return false;
    }
 
    int Find_In_Array_table_first_vector(int character)
@@ -319,10 +313,10 @@ public:
 
       register_value = register_number;
 
-      register_indicator = register_number;
+      register_indicator = table_constants.find(register_number);
    }
 
-   //Процедура СОЗДАТЬ_ЛЕКСЕМУ
+   //Процедура СОЗДАТЬ_ЛЕКСЕМУ Читак
    void Create_Token()
    {
       SymbolicToken result;
@@ -359,26 +353,29 @@ public:
    //Процедура ДОБАВИТЬ_ПЕРЕМЕННУЮ
    void Add_Variable()
    {
+      
       if (Is_Keyword(register_variable))
       {
          Error_Handler();
          return;
       }
 
-      if (!Find_In_Array_TableVariable(register_variable))
+      if (table_variable.count(register_variable) == 0)
       {
-         table_variable.push_back(register_variable);
+         table_variable[register_variable] = 0;
       }
 
-      register_indicator = register_variable;
+      register_indicator = table_variable.find(register_variable);
    }
+
+   
 
 
    //Регистр класса служит для хранения класса лексемы
    TokenType register_type_token;
 
    //Регистр указателя содержит указатель на таблицу имён для лексем PUSH и POP
-   variant<int, string> register_indicator;
+   variant<set<int>::iterator, map<string, int>::iterator> register_indicator;
 
    //Регистр числа используется для вычисления констант
    int register_number;
@@ -480,13 +477,12 @@ public:
 
    void B1a()
    {
+      state = B1;
       register_detection = Find_In_Array_table_first_vector(get<0>(token.value));
       if (register_detection == -1)
       {
          Error_Handler();
       }
-
-      state = B1;
    }
 
    //B1b
@@ -542,7 +538,7 @@ public:
          Error_Handler();
          return;
       }
-      if (register_relation >= Not && register_relation <= More)
+      if (register_relation >= Not && register_relation <= More_then)
          register_relation += 3;//Not + 3 = Not_equal, Less + 3 = Less_or_equal, More + 3 = More_or_equal
       Create_Token();
    }
@@ -637,6 +633,7 @@ public:
 
    void EXIT1()
    {
+      Create_Token();
       register_type_token = TokenType::END_MARKER;
       Create_Token();
 
@@ -669,6 +666,15 @@ public:
    void EXIT4()
    {
       Add_Variable();
+      Create_Token();
+      register_type_token = TokenType::END_MARKER;
+      Create_Token();
+
+      state = Stop;
+   }
+
+   void EXIT5()
+   {
       Create_Token();
       register_type_token = TokenType::END_MARKER;
       Create_Token();
@@ -757,7 +763,6 @@ public:
          break;
 
       default:
-         state = Stop;
          Error_Handler();
          break;
       }
@@ -818,7 +823,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -865,7 +869,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -887,7 +890,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -919,7 +921,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -956,7 +957,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -978,7 +978,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -1000,7 +999,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -1022,7 +1020,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -1054,7 +1051,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -1081,7 +1077,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -1108,7 +1103,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -1145,7 +1139,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -1187,7 +1180,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -1240,7 +1232,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -1297,7 +1288,6 @@ public:
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -1348,13 +1338,12 @@ public:
                state = J1;
                break;
 
-            case (TokenType::END)://EXIT1
+            case (TokenType::END)://EXIT5
 
-               EXIT1();
+               EXIT5();
                break;
 
             default:
-               state = Stop;
                Error_Handler();
                break;
             }
@@ -1366,13 +1355,10 @@ public:
             break;
 
          default:
-            state = Stop;
             Error_Handler();
             break;
          }
       }
-
-
       return table_tokens;
    }
 }; 
