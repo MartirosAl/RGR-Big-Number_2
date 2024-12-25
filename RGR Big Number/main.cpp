@@ -13,9 +13,22 @@ int main()
 
    tokens.Print();
 
+   cout << endl;
+   
    stack<int> stack_int;
 
    tokens.Interpreter(stack_int);
+
+   TableToken tokensBN;
+
+   tokensBN.Lexical_Analyzer_Big_Number("input7.txt");
+
+   tokensBN.PrintBN();
+
+   stack<BigNumber> stack_BigNumber;
+
+   tokensBN.InterpreterBN(stack_BigNumber);
+
    
 
    return 0;

@@ -46,6 +46,8 @@ public:
 
    BigNumber& operator=(const BigNumber& other_);
 
+   BigNumber& operator=(const int& other_);
+
    BigNumber operator+(const BigNumber& other_) const;
 
    BigNumber operator*(const BigNumber& other_) const;
@@ -109,6 +111,8 @@ public:
    {
       return Iterator(nullptr);
    }
+
+   operator int() const;
 };
 
 

@@ -2,8 +2,16 @@
 
 BigNumber::BigNumber(const size_t new_capacity_)
 {
-   number = new short[new_capacity_];
-   capacity = new_capacity_;
+   if (new_capacity_ == 0)
+   {
+      number = new short[100];
+      capacity = 100;
+   }
+   else
+   {
+      number = new short[new_capacity_];
+      capacity = new_capacity_;
+   }
    size = 1;
    number[0] = 0;
 }
@@ -74,7 +82,7 @@ short& BigNumber::operator[](size_t index_) const
    if (size == 0)
       throw "Uninitialized variables";
 
-   if (index_ >= size || index_ >= capacity)
+   if (index_ >= capacity)
       throw "Out of range";
    return number[index_];
 }
@@ -84,7 +92,7 @@ short& BigNumber::operator[](size_t index_)
    if (size == 0)
       throw "Uninitialized variables";
 
-   if (index_ >= size || index_ >= capacity)
+   if (index_ >= capacity)
       throw "Out of range";
    return number[index_];
 }
@@ -156,6 +164,31 @@ BigNumber& BigNumber::operator=(const BigNumber& other_)
    size = other_.size;
    for (size_t i = 0; i < size; i++)
       number[i] = other_[i];
+
+   return *this;
+}
+
+BigNumber& BigNumber::operator=(const int& other_)
+{
+   if (other_ == 0)
+   {
+      if (size == capacity)
+         Expansion();
+      number[0] = 0;
+      size = 1;
+      return *this;
+   }
+   int i = 0;
+   size = 0;
+   int temp = other_;
+   for (; temp > 0; temp = temp / 10)
+   {
+      if (size == capacity)
+         Expansion();
+      number[i] = temp%10;
+      size++;
+      i++;
+   }
 
    return *this;
 }
@@ -631,4 +664,24 @@ istream& operator>>(istream& stream, BigNumber& object_)
    stream.ignore();//Игнорируем \n или пробел
 
    return stream;
+}
+
+BigNumber::operator int() const
+{
+   short max_int_s[] = { 7, 4, 6, 3, 8, 4, 7, 4, 1, 2 };
+   BigNumber max_int(max_int_s, 10);
+
+   int result = 0;
+
+   if (*this < max_int)
+   {
+      for (size_t i = size; i > 0; i--)
+      {
+         result = result * 10 + (int)number[i-1];
+      }
+   }
+   else
+      throw "Too long number for int";
+   
+   return result;
 }

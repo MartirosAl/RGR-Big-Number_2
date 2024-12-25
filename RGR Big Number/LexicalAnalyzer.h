@@ -104,6 +104,13 @@ public:
       int number_line;
    };
 
+   struct SymbolicTokenforBigNumber
+   {
+      TokenType token_class;
+      variant<BigNumber, set<BigNumber>::iterator, map<string, BigNumber>::iterator> value;
+      int number_line;
+   };
+
    struct KeywordDetection
    {
       vector<vector<int>> table_first_vector
@@ -160,6 +167,15 @@ public:
    //Таблица лексем для вывода
    vector<SymbolicToken> table_tokens;
 
+   //Таблица констант для BigNumber
+   set<BigNumber> table_constants_BigNumber;
+
+   //Таблица переменных
+   map<string, BigNumber> table_variable_BigNumber;
+
+   //Таблица лексем BigNumber для вывода
+   vector<SymbolicTokenforBigNumber> table_tokens_BigNumber;
+
    //Таблицы для обнаружения ключевых слов
    const KeywordDetection table_detection;
 
@@ -169,6 +185,10 @@ public:
    void JUMP(int& number_token);
 
    void Interpreter(stack<int>& stack_);
+
+   void JUMPBN(int& number_token);
+
+   void InterpreterBN(stack<BigNumber>& stack_);
 
    //ФУНЦКИИ//
 
@@ -204,7 +224,36 @@ public:
    }
 
 
+   void PrintBN()
+   {
+      for (int i = 0; i < table_tokens_BigNumber.size(); i++)
+      {
 
+         cout << table_tokens_BigNumber[i].number_line << " ";
+         cout << TokenTypeString[table_tokens_BigNumber[i].token_class] << " ";
+
+         if (table_tokens_BigNumber[i].token_class == TokenType::ARITHMETIC_OPERATION)
+         {
+            cout << (char)(int)get<0>(table_tokens_BigNumber[i].value) << " ";
+         }
+         else if (table_tokens_BigNumber[i].token_class == TokenType::RELATION)
+         {
+            cout << RelationString[(int)get<0>(table_tokens_BigNumber[i].value)] << " ";
+         }
+         else if (table_tokens_BigNumber[i].token_class == TokenType::COMMENT || table_tokens_BigNumber[i].token_class == TokenType::READ ||
+            table_tokens_BigNumber[i].token_class == TokenType::WRITE || table_tokens_BigNumber[i].token_class == TokenType::END ||
+            table_tokens_BigNumber[i].token_class == TokenType::END_MARKER || table_tokens_BigNumber[i].token_class == TokenType::ERROR)
+            ;//nothing
+         else if (table_tokens_BigNumber[i].value.index() == 2)
+            cout << get<0>(*get<2>(table_tokens_BigNumber[i].value)) << " ";
+         else if (table_tokens_BigNumber[i].value.index() == 1)
+            cout << *get<1>(table_tokens_BigNumber[i].value) << " ";
+         else if (table_tokens_BigNumber[i].value.index() == 0)
+            cout << get<0>(table_tokens_BigNumber[i].value) << " ";
+
+         cout << endl;
+      }
+   }
 
 
 
@@ -248,7 +297,7 @@ public:
       {
          result.token_class = TokenType::RELATION;
          result.value = Not;
-      }     
+      }
       else if (character == ' ' || character == '\t')
       {
          result.token_class = TokenType::SPACE;
@@ -273,6 +322,68 @@ public:
       {
          result.token_class = TokenType::ERROR;
          result.value = (int)character;
+      }
+      return result;
+   }
+
+   SymbolicTokenforBigNumber TransliteratorBN(int character)
+   {
+      SymbolicTokenforBigNumber result;
+      result.value = 0;
+      if (character >= 'A' && character <= 'Z' || character >= 'a' && character <= 'z')
+      {
+         result.token_class = TokenType::LETTER;
+         result.value = (int)character;
+      }
+      else if (character >= '0' && character <= '9')
+      {
+         result.token_class = TokenType::DIGIT;
+         result.value = (int)character - '0';
+      }
+      else if (character == '+' || character == '-' || character == '*' || character == '/' || character == '%')
+      {
+         result.token_class = TokenType::ARITHMETIC_OPERATION;
+         result.value = (int)character;
+      }
+      else if (character == '<')
+      {
+         result.token_class = TokenType::RELATION;
+         result.value = Less_then;
+      }
+      else if (character == '>')
+      {
+         result.token_class = TokenType::RELATION;
+         result.value = More_then;
+      }
+      else if (character == '=')
+      {
+         result.token_class = TokenType::RELATION;
+         result.value = Equal;
+      }
+      else if (character == '!')
+      {
+         result.token_class = TokenType::RELATION;
+         result.value = Not;
+      }
+      else if (character == ' ' || character == '\t')
+      {
+         result.token_class = TokenType::SPACE;
+      }
+      else if (character == ';')
+      {
+         result.token_class = TokenType::SEMI_COLON;
+      }
+      else if (character == '\n')
+      {
+         result.token_class = TokenType::LF;
+      }
+      else if (character == EOF)
+      {
+         result.token_class = TokenType::END;
+      }
+      else
+      {
+         result.token_class = TokenType::ERROR;
       }
       return result;
    }
@@ -328,6 +439,16 @@ public:
       register_indicator = table_constants.find(register_number);
    }
 
+   //Процедура ДОБАВИТЬ_КОНСТАНТУ для BigNumber
+   void Add_ConstantBN()
+   {
+      table_constants_BigNumber.emplace(register_big_number);
+
+      register_value_big_number = register_big_number;
+
+      register_indicator_for_Big_Number = table_constants_BigNumber.find(register_big_number);
+   }
+
    //Процедура СОЗДАТЬ_ЛЕКСЕМУ Читак
    void Create_Token()
    {
@@ -353,11 +474,45 @@ public:
       register_value = -1;
    }
 
+   //Процедура СОЗДАТЬ_ЛЕКСЕМУ для BigNumber
+   void Create_TokenBN()
+   {
+      SymbolicTokenforBigNumber result;
+
+      if (register_type_token == TokenType::RELATION)
+         result.value = register_relation;
+      else if (register_type_token == TokenType::ARITHMETIC_OPERATION)
+         result.value = register_value;
+      else if (register_indicator_for_Big_Number.index() == 1)
+      {
+         result.value = get<1>(register_indicator_for_Big_Number);
+      }
+      else if (register_indicator_for_Big_Number.index() == 0)
+      {
+         result.value = get<0>(register_indicator_for_Big_Number);
+      }
+      result.token_class = register_type_token;
+      result.number_line = number_line;
+
+      table_tokens_BigNumber.push_back(result);
+
+      register_value = -1;
+   }
+
    //Процедура обработки ошибок
    void Error_Handler()
    {
       register_type_token = TokenType::ERROR;
       Create_Token();
+      cerr << "An error was found in the number line " << number_line << endl;
+      state = J1;
+   }
+
+   //Процедура обработки ошибок для BigNumber
+   void Error_HandlerBN()
+   {
+      register_type_token = TokenType::ERROR;
+      Create_TokenBN();
       cerr << "An error was found in the number line " << number_line << endl;
       state = J1;
    }
@@ -380,6 +535,23 @@ public:
       register_indicator = table_variable.find(register_variable);
    }
 
+   //Процедура ДОБАВИТЬ_ПЕРЕМЕННУЮ для BigNumber
+   void Add_VariableBN()
+   {
+
+      if (Is_Keyword(register_variable))
+      {
+         Error_HandlerBN();
+         return;
+      }
+
+      if (table_variable_BigNumber.count(register_variable) == 0)
+      {
+         table_variable_BigNumber[register_variable] = 0;
+      }
+
+      register_indicator_for_Big_Number = table_variable_BigNumber.find(register_variable);
+   }
    
 
    //ПЕРЕМЕННЫЕ//
@@ -414,9 +586,21 @@ public:
    //Переменная для M1
    int tempforswitchinM1;
 
+   //Регистр числа используется для вычисления констант типа BigNumber
+   BigNumber register_big_number;
+
+   //Регистр указателя содержит указатель на таблицу имён для лексем PUSH и POP для BigNumber
+   variant<set<BigNumber>::iterator, map<string, BigNumber>::iterator> register_indicator_for_Big_Number;
+
+   //Регистр значения хранит значения лексем BigNumber
+   BigNumber register_value_big_number;
+
    int state = A1;
 
    SymbolicToken token;
+
+   SymbolicTokenforBigNumber tokenBN;
+
 
    //КОМАНДЫ//
 
@@ -468,6 +652,7 @@ public:
       state = A2;
    }
    
+
    void A2e()
    {
       state = A2;
@@ -778,6 +963,359 @@ public:
 
       default:
          Error_Handler();
+         break;
+      }
+   }
+
+
+   void A1aBN()
+   {
+      Create_TokenBN();
+      number_line++;
+
+      state = A1;
+   }
+
+
+   void A2bBN()
+   {
+      Create_TokenBN();
+      number_line++;
+
+      state = A2;
+   }
+
+   void A2cBN()
+   {
+      Add_ConstantBN();
+      Create_TokenBN();
+      number_line++;
+
+      state = A2;
+   }
+
+   void A2dBN()
+   {
+      Add_VariableBN();
+      Create_TokenBN();
+      number_line++;
+
+      state = A2;
+   }
+
+
+   void A2eBN()
+   {
+      state = A2;
+
+      if (register_relation == Not)
+      {
+         Error_HandlerBN();
+         return;
+      }
+      Create_TokenBN();
+      number_line++;
+
+   }
+
+   void A2fBN()
+   {
+      Error_HandlerBN();
+      number_line++;
+
+      state = A2;
+   }
+
+   void B1aBN()
+   {
+      state = B1;
+      register_detection = Find_In_Array_table_first_vector((int)get<0>(tokenBN.value));
+      if (register_detection == -1)
+      {
+         Error_HandlerBN();
+      }
+   }
+
+   //B1bBN
+
+   void C1aBN()
+   {
+      register_type_token = TokenType::ARITHMETIC_OPERATION;
+      register_value = (int)get<0>(tokenBN.value);
+      Create_TokenBN();
+
+      state = C1;
+   }
+
+   //C1bBN
+   //C1cBN
+   //C1dBN
+
+   void C1eBN()
+   {
+      Add_ConstantBN();
+      Create_TokenBN();
+
+      state = C1;
+   }
+
+   void C1fBN()
+   {
+      Add_VariableBN();
+      Create_TokenBN();
+
+      state = C1;
+   }
+
+   void C1gBN()
+   {
+      state = C1;
+
+      if (register_relation == Not)
+      {
+         Error_HandlerBN();
+         return;
+      }
+      Create_TokenBN();
+
+   }
+
+   void C1hBN()
+   {
+      state = C1;
+
+      if ((int)get<0>(tokenBN.value) != (int)Equal)
+      {
+         Error_HandlerBN();
+         return;
+      }
+      if (register_relation >= Not && register_relation <= More_then)
+         register_relation += 3;//Not + 3 = Not_equal, Less + 3 = Less_or_equal, More + 3 = More_or_equal
+      Create_TokenBN();
+   }
+
+   void D1aBN()
+   {
+      register_type_token = TokenType::RELATION;
+      register_relation = (int)get<0>(tokenBN.value);
+
+      state = D1;
+   }
+
+   //E1aBN
+   //E2aBN
+   //E2bBN
+   //E3aBN
+
+   void G1aBN()
+   {
+      register_big_number = get<0>(tokenBN.value);
+
+      state = G1;
+   }
+
+   void G1bBN()
+   {
+      short ten_s[] = {0, 1};
+      BigNumber ten(ten_s, 2);
+      register_big_number = (register_big_number * ten) + get<0>(tokenBN.value);
+
+      state = G1;
+   }
+
+   void H1aBN()
+   {
+      register_variable = (int)get<0>(tokenBN.value);
+
+      state = H1;
+   }
+
+   void H1bBN()
+   {
+      register_variable.push_back((int)get<0>(tokenBN.value));
+
+      state = H1;
+   }
+
+   void I1aBN()
+   {
+      register_type_token = TokenType::COMMENT;
+
+      state = I1;
+   }
+
+   void I2aBN()
+   {
+      register_type_token = TokenType::COMMENT;
+
+      state = I2;
+   }
+
+   void I2bBN()
+   {
+      Add_ConstantBN();
+      Create_TokenBN();
+      register_type_token = TokenType::COMMENT;
+
+      state = I2;
+   }
+
+   void I2cBN()
+   {
+      Add_VariableBN();
+      Create_TokenBN();
+      register_type_token = TokenType::COMMENT;
+
+      state = I2;
+   }
+
+   void I2dBN()
+   {
+      state = I2;
+
+      if (register_relation == Not)
+      {
+         Error_HandlerBN();
+         return;
+      }
+      Create_TokenBN();
+      register_type_token = TokenType::COMMENT;
+
+   }
+
+   void EXIT1BN()
+   {
+      register_type_token = TokenType::END_MARKER;
+      Create_TokenBN();
+
+      state = Stop;
+   }
+
+   void EXIT2BN()
+   {
+      state = Stop;
+
+      if (register_relation == Not)
+      {
+         register_type_token = TokenType::ERROR;
+      }
+      Create_TokenBN();
+      register_type_token = TokenType::END_MARKER;
+      Create_TokenBN();
+   }
+
+   void EXIT3BN()
+   {
+      Add_ConstantBN();
+      Create_TokenBN();
+      register_type_token = TokenType::END_MARKER;
+      Create_TokenBN();
+
+      state = Stop;
+   }
+
+   void EXIT4BN()
+   {
+      Add_VariableBN();
+      Create_TokenBN();
+      register_type_token = TokenType::END_MARKER;
+      Create_TokenBN();
+
+      state = Stop;
+   }
+
+   void EXIT5BN()
+   {
+      Create_TokenBN();
+      register_type_token = TokenType::END_MARKER;
+      Create_TokenBN();
+
+      state = Stop;
+   }
+
+   void M_1BN()
+   {
+      if (register_detection == -1)
+         return;
+      tempforswitchinM1 = table_detection.table_detection[register_detection][1];
+      if (table_detection.table_detection[register_detection][0] != (int)get<0>(tokenBN.value))
+      {
+         if (table_detection.table_detection[register_detection][2] != -1 && 
+            table_detection.table_detection[table_detection.table_detection[register_detection][2]][0] == (int)get<0>(tokenBN.value))
+         {
+            tempforswitchinM1 = table_detection.table_detection[table_detection.table_detection[register_detection][2]][1];
+            register_detection = table_detection.table_detection[register_detection][2];
+         }
+         else
+         {
+            Error_HandlerBN();
+            return;
+         }
+      }
+
+      switch (tempforswitchinM1)
+      {
+      case(table_detection.B1b)://B1b
+
+         register_detection++;
+
+         state = B1;
+         break;
+
+      case(table_detection.C1b)://C1b
+
+         register_type_token = TokenType::END;
+         Create_TokenBN();
+
+         state = C1;
+         break;
+
+      case(table_detection.C1c)://C1c
+
+         register_type_token = TokenType::READ;
+         Create_TokenBN();
+
+         state = C1;
+         break;
+
+      case(table_detection.C1d)://C1d
+
+         register_type_token = TokenType::WRITE;
+         Create_TokenBN();
+
+         state = C1;
+         break;
+
+      case(table_detection.E1a)://E1a
+
+         register_type_token = TokenType::PUSH;
+
+         state = E1;
+         break;
+
+      case(table_detection.E2a)://E2a
+
+         register_type_token = TokenType::JI;
+
+         state = E2;
+         break;
+
+      case(table_detection.E2b)://E2b
+
+         register_type_token = TokenType::JMP;
+
+         state = E2;
+         break;
+
+      case(table_detection.E3a)://E3a
+
+         register_type_token = TokenType::POP;
+
+         state = E3;
+         break;
+
+      default:
+         Error_HandlerBN();
          break;
       }
    }
@@ -1379,5 +1917,607 @@ public:
          }
       }
       return table_tokens;
+   }
+
+
+
+   //ЛЕКСИЧЕЧЕСКИЙ АНАЛИЗАТОР для BigNumber//
+
+   vector<SymbolicTokenforBigNumber> Lexical_Analyzer_Big_Number(const char* filename)
+   {
+      ifstream in(filename);
+      if (!in)
+      {
+         cout << "Не удалось открыть файл " << filename << endl;
+         throw "Error";
+      }
+
+
+      while (!stop)
+      {
+         int character = in.get();
+         tokenBN = TransliteratorBN(character);
+
+         switch (state)
+         {
+
+            ////////////////////////////////////////////////////////////////////////////A1
+         case (A1):
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::LETTER)://B1a
+
+               B1aBN();
+               break;
+
+            case (TokenType::ARITHMETIC_OPERATION)://C1a
+
+               C1aBN();
+               break;
+
+            case (TokenType::RELATION)://D1a
+
+               D1aBN();
+               break;
+
+            case (TokenType::SPACE)://A1
+
+               state = A1;
+               break;
+
+            case (TokenType::LF)://A1b
+
+               A1b();
+               break;
+
+            case (TokenType::SEMI_COLON)://I1a
+
+               I1aBN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////A2
+         case (A2):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::LETTER)://B1a
+
+               B1aBN();
+               break;
+
+            case (TokenType::ARITHMETIC_OPERATION)://C1a
+
+               C1aBN();
+               break;
+
+            case (TokenType::RELATION)://D1a
+
+               D1aBN();
+               break;
+
+            case (TokenType::SPACE)://A2
+
+               state = A2;
+               break;
+
+            case (TokenType::LF)://A2a
+
+               A2a();
+               break;
+
+            case (TokenType::SEMI_COLON)://I2a
+
+               I2aBN();
+               break;
+
+            case (TokenType::END)://EXIT1
+
+               EXIT1BN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////B1
+         case(B1):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::LETTER)://M1
+
+               M_1BN();
+               break;
+
+            case (TokenType::LF)://A2f
+
+               A2fBN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////C1
+         case(C1):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::SPACE)://C1
+
+               state = C1;
+               break;
+
+            case (TokenType::LF)://A2a
+
+               A2a();
+               break;
+
+            case (TokenType::SEMI_COLON)://I2a
+
+               I2aBN();
+               break;
+
+            case (TokenType::END)://EXIT1
+
+               EXIT1BN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////D1
+         case (D1):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::RELATION)://C1h
+
+               C1hBN();
+               break;
+
+            case (TokenType::SPACE)://C1g
+
+               C1gBN();
+               break;
+
+            case (TokenType::LF)://A2e
+
+               A2eBN();
+               break;
+
+            case (TokenType::SEMI_COLON)://I2d
+
+               I2dBN();
+               break;
+
+            case (TokenType::END)://EXIT2
+
+               EXIT2BN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////E1
+         case (E1):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::SPACE)://F1
+
+               state = F1;
+               break;
+
+            case (TokenType::LF)://A2f
+
+               A2fBN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////E1
+         case (E2):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::SPACE)://F2
+
+               state = F2;
+               break;
+
+            case (TokenType::LF)://A2f
+
+               A2fBN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////E3
+         case (E3):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::SPACE)://F3
+
+               state = F3;
+               break;
+
+            case (TokenType::LF)://A2f
+
+               A2fBN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////F1
+         case(F1):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::LETTER)://H1a
+
+               H1aBN();
+               break;
+
+            case (TokenType::DIGIT)://G1a
+
+               G1aBN();
+               break;
+
+            case (TokenType::SPACE)://F1
+
+               state = F1;
+               break;
+
+            case (TokenType::LF)://A2f
+
+               A2fBN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////F2
+         case(F2):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::DIGIT)://G1a
+
+               G1aBN();
+               break;
+
+            case (TokenType::SPACE)://F2
+
+               state = F2;
+               break;
+
+            case (TokenType::LF)://A2f
+
+               A2fBN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////F3
+         case(F3):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::LETTER)://H1a
+
+               H1aBN();
+               break;
+
+            case (TokenType::SPACE)://F3
+
+               state = F3;
+               break;
+
+            case (TokenType::LF)://A2f
+
+               A2fBN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////G1
+         case(G1):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::DIGIT)://G1b
+
+               G1bBN();
+               break;
+
+            case (TokenType::SPACE)://C1e
+
+               C1eBN();
+               break;
+
+            case (TokenType::LF)://A2c
+
+               A2cBN();
+               break;
+
+            case (TokenType::SEMI_COLON)://I2b
+
+               I2bBN();
+               break;
+
+            case (TokenType::END)://EXIT3
+
+               EXIT3BN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////H1
+         case(H1):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::LETTER)://H1b
+
+               H1bBN();
+               break;
+
+            case (TokenType::DIGIT)://H1b
+
+               H1bBN();
+               break;
+
+            case (TokenType::SPACE)://C1f
+
+               C1fBN();
+               break;
+
+            case (TokenType::LF)://A2d
+
+               A2dBN();
+               break;
+
+            case (TokenType::SEMI_COLON)://I2c
+
+               I2cBN();
+               break;
+
+            case (TokenType::END)://EXIT4
+
+               EXIT4BN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////I1
+         case(I1):
+
+            switch (tokenBN.token_class)
+            {
+
+            case (TokenType::LETTER)://I1
+
+               state = I1;
+               break;
+
+            case (TokenType::DIGIT)://I1
+
+               state = I1;
+               break;
+
+            case (TokenType::ARITHMETIC_OPERATION)://I1
+
+               state = I1;
+               break;
+
+            case (TokenType::RELATION)://I1
+
+               state = I1;
+               break;
+
+            case (TokenType::SPACE)://I1
+
+               state = I1;
+               break;
+
+            case (TokenType::LF)://A1a
+
+               A1aBN();
+               break;
+
+            case(TokenType::SEMI_COLON)://I1
+
+               state = I1;
+               break;
+
+            case (TokenType::ERROR)://I1
+
+               state = I1;
+               break;
+
+            case(TokenType::END)://EXIT1
+
+               EXIT5BN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////I1
+         case(I2):
+
+            switch (tokenBN.token_class)
+            {
+            case(TokenType::LETTER)://I2
+
+               state = I2;
+               break;
+
+            case(TokenType::DIGIT)://I2
+
+               state = I2;
+               break;
+
+            case(TokenType::ARITHMETIC_OPERATION)://I2
+
+               state = I2;
+               break;
+
+            case(TokenType::RELATION)://I2
+
+               state = I2;
+               break;
+
+            case(TokenType::SPACE)://I2
+
+               state = I2;
+               break;
+
+            case(TokenType::LF)://A2b
+
+               A2bBN();
+               break;
+
+            case(TokenType::SEMI_COLON)://I2
+
+               state = I2;
+               break;
+
+            case(TokenType::ERROR)://I2
+
+               state = I2;
+               break;
+
+            case(TokenType::END)://EXIT1
+
+               EXIT5BN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////J1
+         case(J1):
+
+            switch (tokenBN.token_class)
+            {
+            case (TokenType::LETTER)://J1
+
+               state = J1;
+               break;
+
+            case (TokenType::DIGIT)://J1
+
+               state = J1;
+               break;
+
+            case (TokenType::ARITHMETIC_OPERATION)://J1
+
+               state = J1;
+               break;
+
+            case (TokenType::RELATION)://J1
+
+               state = J1;
+               break;
+
+            case (TokenType::SPACE)://J1
+
+               state = J1;
+               break;
+
+            case (TokenType::LF)://A2a
+
+               A2a();
+               break;
+
+            case (TokenType::SEMI_COLON)://J1
+
+               state = J1;
+               break;
+
+            case (TokenType::ERROR)://J1
+
+               state = J1;
+               break;
+
+            case (TokenType::END)://EXIT5
+
+               EXIT5BN();
+               break;
+
+            default:
+               Error_HandlerBN();
+               break;
+            }
+            break;
+
+            ////////////////////////////////////////////////////////////////////////////Stop    
+         case(Stop):
+            stop = true;
+            break;
+
+         default:
+            Error_HandlerBN();
+            break;
+         }
+      }
+
+      return table_tokens_BigNumber;
    }
 };
