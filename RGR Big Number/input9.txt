@@ -1,0 +1,25 @@
+push 1
+push 2
++ ; 1 + 2 = 3
+pop x
+push x
+write
+push x
+push 10
+* ; 3 * 10 = 30
+pop x
+push x
+write
+push x
+push 2
+/ ; 30 / 2 = 15
+pop x
+push x
+write
+push x
+push 4
+% ; 15 % 4 = 3
+pop x
+push x
+write
+end

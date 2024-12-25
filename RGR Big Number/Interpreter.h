@@ -27,7 +27,6 @@ void TableToken::Interpreter(stack<int>& stack_)
    }
 
 
-   int counter_stack = 0;
    string name_variable = " ";
    int value_variable = 0;
    int temp_var1 = 0;
@@ -50,12 +49,11 @@ void TableToken::Interpreter(stack<int>& stack_)
             if (table_tokens[number_token].value.index() == 1)
                stack_.push(*get<1>(table_tokens[number_token].value));
 
-         counter_stack++;
          break;
 
       case (TokenType::POP):
          
-         if (counter_stack <= 0)
+         if (stack_.empty())
          {
             cerr << "Stack usage error";
             return;
@@ -67,13 +65,12 @@ void TableToken::Interpreter(stack<int>& stack_)
 
          (get<2>(table_tokens[number_token].value)->second) = value_variable;
 
-         counter_stack--;
          break;
          
       case (TokenType::ARITHMETIC_OPERATION):
 
 
-         if (counter_stack <= 1)
+         if (stack_.size() <= 1)
          {
             cerr << "Stack usage error";
             return;
@@ -111,12 +108,11 @@ void TableToken::Interpreter(stack<int>& stack_)
             break;
          }
 
-         counter_stack--;
          break;
 
       case(TokenType::RELATION):
 
-         if (counter_stack <= 1)
+         if (stack_.size() <= 1)
          {
             cerr << "Stack usage error";
             return;
@@ -149,7 +145,6 @@ void TableToken::Interpreter(stack<int>& stack_)
             break;
          }
 
-         counter_stack--;
          break;
 
       case(TokenType::JMP):
@@ -159,7 +154,7 @@ void TableToken::Interpreter(stack<int>& stack_)
       
       case(TokenType::JI):
 
-         if (counter_stack <= 0)
+         if (stack_.empty())
          {
             cerr << "Stack usage error";
             return;
@@ -170,7 +165,6 @@ void TableToken::Interpreter(stack<int>& stack_)
          if (temp_var1)
             JUMP(number_token);
 
-         counter_stack--;
          break;
   
       case(TokenType::READ):
@@ -179,12 +173,11 @@ void TableToken::Interpreter(stack<int>& stack_)
          stack_.push(temp_var1);
          
 
-         counter_stack++;
          break;
 
       case(TokenType::WRITE):
          
-         if (counter_stack <= 0)
+         if (stack_.empty())
          {
             cerr << "Stack usage error";
             return;
@@ -193,7 +186,6 @@ void TableToken::Interpreter(stack<int>& stack_)
          cout << stack_.top() << endl;
          stack_.pop();
 
-         counter_stack--;
          break;
 
       case(TokenType::END):
@@ -216,7 +208,7 @@ void TableToken::JUMPBN(int& number_token)
    {
       if (table_tokens_BigNumber[x].number_line == (int)*get<1>(table_tokens_BigNumber[number_token].value))
       {
-         number_token = x - 1;// остыль внутри for станет нужным значением
+         number_token = x - 1;// остыль. number_token внутри for станет нужным значением
          return;
       }
    }
@@ -235,7 +227,6 @@ void TableToken::InterpreterBN(stack<BigNumber>& stack_)
    }
 
 
-   int counter_stack = 0;
    string name_variable = " ";
    BigNumber value_variable = 0;
    BigNumber temp_var1 = 0;
@@ -259,12 +250,11 @@ void TableToken::InterpreterBN(stack<BigNumber>& stack_)
             if (table_tokens_BigNumber[number_token].value.index() == 1)
                stack_.push(*get<1>(table_tokens_BigNumber[number_token].value));
 
-         counter_stack++;
          break;
 
       case (TokenType::POP):
 
-         if (counter_stack <= 0)
+         if (stack_.empty())
          {
             cerr << "Stack usage error";
             return;
@@ -276,13 +266,12 @@ void TableToken::InterpreterBN(stack<BigNumber>& stack_)
 
          (get<2>(table_tokens_BigNumber[number_token].value)->second) = value_variable;
 
-         counter_stack--;
          break;
 
       case (TokenType::ARITHMETIC_OPERATION):
 
 
-         if (counter_stack <= 1)
+         if (stack_.size() <= 1)
          {
             cerr << "Stack usage error";
             return;
@@ -322,12 +311,11 @@ void TableToken::InterpreterBN(stack<BigNumber>& stack_)
 
          stack_.push(temp_var3);
 
-         counter_stack--;
          break;
 
       case(TokenType::RELATION):
 
-         if (counter_stack <= 1)
+         if (stack_.size() <= 1)
          {
             cerr << "Stack usage error";
             return;
@@ -361,7 +349,6 @@ void TableToken::InterpreterBN(stack<BigNumber>& stack_)
          }
          stack_.push(temp_var3);
 
-         counter_stack--;
          break;
 
       case(TokenType::JMP):
@@ -371,7 +358,7 @@ void TableToken::InterpreterBN(stack<BigNumber>& stack_)
 
       case(TokenType::JI):
 
-         if (counter_stack <= 0)
+         if (stack_.empty())
          {
             cerr << "Stack usage error";
             return;
@@ -382,7 +369,6 @@ void TableToken::InterpreterBN(stack<BigNumber>& stack_)
          if (temp_var1)
             JUMPBN(number_token);
 
-         counter_stack--;
          break;
 
       case(TokenType::READ):
@@ -390,13 +376,11 @@ void TableToken::InterpreterBN(stack<BigNumber>& stack_)
          cin >> temp_var1;
          stack_.push(temp_var1);
 
-
-         counter_stack++;
          break;
 
       case(TokenType::WRITE):
 
-         if (counter_stack <= 0)
+         if (stack_.empty())
          {
             cerr << "Stack usage error";
             return;
@@ -405,7 +389,6 @@ void TableToken::InterpreterBN(stack<BigNumber>& stack_)
          cout << stack_.top() << endl;
          stack_.pop();
 
-         counter_stack--;
          break;
 
       case(TokenType::END):

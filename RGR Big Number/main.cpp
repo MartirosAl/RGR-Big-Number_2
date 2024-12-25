@@ -7,6 +7,7 @@
 int main()
 {
 
+
    TableToken tokens;
 
    tokens.Lexical_Analyzer_int("input7.txt");
