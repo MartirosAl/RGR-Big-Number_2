@@ -1,0 +1,27 @@
+; Проверка числа на простоту.
+read ; Прочитать x.
+pop x
+pushbn 2 ; y = 2
+pop y
+; Основной цикл.
+pushbn y ; Сравнить x и y.
+pushbn x
+>=
+ji 25 ; Если y >= x, то остановиться.
+pushbn x ; Сравнить x % y и 0.
+pushbn y
+%
+pushbn 0
+=
+ji 22 ; Если x % y = 0, то число составное. Остановиться.
+pushbn y ; y = y + 1
+pushbn 1
++
+pop y
+jmp 7 ; Перейти на следующую итерацию.
+push 0 ; Напечатать 0.
+write
+end
+pushbn 1 ; Напечатать 1.
+write
+end

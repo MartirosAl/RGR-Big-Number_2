@@ -1,0 +1,7 @@
+readbn
+pushbn 3
+pushbn 4
++
+*
+write
+end

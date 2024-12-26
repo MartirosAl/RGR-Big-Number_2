@@ -1,0 +1,8 @@
+pushbn 1
+pop x
+pushbn x
+pushbn 001
+>=
+ji 14
+jmp 3
+end

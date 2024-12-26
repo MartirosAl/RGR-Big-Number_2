@@ -93,7 +93,9 @@ short& BigNumber::operator[](size_t index_)
       throw "Uninitialized variables";
 
    if (index_ >= capacity)
-      throw "Out of range";
+   {
+      Expansion(index_ + 1);
+   }
    return number[index_];
 }
 
@@ -170,6 +172,8 @@ BigNumber& BigNumber::operator=(const BigNumber& other_)
 
 BigNumber& BigNumber::operator=(const int& other_)
 {
+   if (other_ < 0)
+      throw "Assignment error";
    if (other_ == 0)
    {
       if (size == capacity)
@@ -552,7 +556,7 @@ void BigNumber::Number_Shift(const size_t index_)
    if (index_ == 0)
       return;
 
-   if (capacity < size + index_)
+   if (capacity < (size + index_))
       Expansion();
    
 

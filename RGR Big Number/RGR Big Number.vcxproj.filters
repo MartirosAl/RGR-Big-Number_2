@@ -64,5 +64,23 @@
     <Text Include="input9.txt">
       <Filter>Файлы ресурсов</Filter>
     </Text>
+    <Text Include="input10.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
+    <Text Include="input20.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
+    <Text Include="input30.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
+    <Text Include="input40.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
+    <Text Include="input50.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
+    <Text Include="input60.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
   </ItemGroup>
 </Project>

@@ -10,25 +10,17 @@ int main()
 
    TableToken tokens;
 
-   tokens.Lexical_Analyzer_int("input7.txt");
+   tokens.Lexical_Analyzer("input20.txt");
 
    tokens.Print();
 
    cout << endl;
    
-   stack<int> stack_int;
+   stack<variant<int, BigNumber>> stack;
 
-   tokens.Interpreter(stack_int);
+   tokens.Interpreter(stack);
 
-   TableToken tokensBN;
 
-   tokensBN.Lexical_Analyzer_Big_Number("input7.txt");
-
-   tokensBN.PrintBN();
-
-   stack<BigNumber> stack_BigNumber;
-
-   tokensBN.InterpreterBN(stack_BigNumber);
 
    
 

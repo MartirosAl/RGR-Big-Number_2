@@ -1,0 +1,10 @@
+pushbn 1
+pop x
+pushbn x
+write
+pushbn x
+pushbn 1
++
+pop x
+jmp 3
+; Бесконечный цикл.

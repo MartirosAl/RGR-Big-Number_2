@@ -1,0 +1,6 @@
+readbn
+pop x
+pushbn x
+getd 0
+write
+end

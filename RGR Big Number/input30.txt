@@ -1,0 +1,22 @@
+read ; Прочитать x.
+pop x
+pushbn 1 ; r = 1
+pop r
+pushbn 1 ; y = 1
+pop y
+pushbn y ; Сравнить y и x.
+pushbn x
+>
+ji 20 ; Если y > x, то остановиться.
+pushbn y ; r = r * y
+pushbn r
+*
+pop r
+pushbn y ; y = y + 1
+pushbn 1
++
+pop y
+jmp 7 ; Перейти на следующую итерацию.
+pushbn r ; Напечатать r.
+write
+end
