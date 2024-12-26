@@ -75,7 +75,6 @@ public:
 
    bool operator!=(const BigNumber& other_) const;
 
-
    //Полное очищение массива
    void Clear();
 
@@ -112,7 +111,6 @@ public:
       return Iterator(nullptr);
    }
 
-   operator int() const;
 };
 
 

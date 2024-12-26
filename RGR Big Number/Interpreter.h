@@ -6,7 +6,7 @@ void TableToken::JUMP(int& number_token)
 {
    for (int x = 0; x < table_tokens.size(); x++)
    {
-      if (table_tokens[x].number_line == get<0>(table_tokens[number_token].value))
+      if (table_tokens[x].number_line == get<0>(*get<1>(table_tokens[number_token].value)))
       {
          number_token = x - 1;// остыль внутри for станет нужным значением
          return;
@@ -156,59 +156,62 @@ void TableToken::Interpreter(stack<variant<int, BigNumber>>& stack_)
             }
          else if (a == 0 && b == 1)
          {
+            temp_var3 = get<0>(temp_var1);
             switch (get<0>(table_tokens[number_token].value))
             {
             case ('+'):
-               stack_.push(get<1>(temp_var2) + (BigNumber)get<0>(temp_var1));
+               
+               stack_.push(get<1>(temp_var2) + temp_var3);
                break;
             case ('-'):
-               stack_.push(get<1>(temp_var2) - (BigNumber)get<0>(temp_var1));
+               stack_.push(get<1>(temp_var2) - temp_var3);
                break;
             case('*'):
-               stack_.push(get<1>(temp_var2) * (BigNumber)get<0>(temp_var1));
+               stack_.push(get<1>(temp_var2) * temp_var3);
                break;
             case('/'):
                if (get<0>(temp_var1) == 0)
                {
                   cerr << "Arithmetic error";
                }
-               stack_.push(get<1>(temp_var2) / (BigNumber)get<0>(temp_var1));
+               stack_.push(get<1>(temp_var2) / temp_var3);
                break;
             case ('%'):
                if (get<0>(temp_var1) == 0)
                {
                   cerr << "Arithmetic error";
                }
-               stack_.push(get<1>(temp_var2) % (BigNumber)get<0>(temp_var1));
+               stack_.push(get<1>(temp_var2) % temp_var3);
                break;
             }
          }
          else if (a == 1 && b == 0)
          {
+            temp_var3 = get<0>(temp_var2);
             switch (get<0>(table_tokens[number_token].value))
             {
             case ('+'):
-               stack_.push((BigNumber)get<0>(temp_var2) + get<1>(temp_var1));
+               stack_.push(temp_var3 + get<1>(temp_var1));
                break;
             case ('-'):
-               stack_.push((BigNumber)get<0>(temp_var2) - get<1>(temp_var1));
+               stack_.push(temp_var3 - get<1>(temp_var1));
                break;
             case('*'):
-               stack_.push((BigNumber)get<0>(temp_var2) * get<1>(temp_var1));
+               stack_.push(temp_var3 * get<1>(temp_var1));
                break;
             case('/'):
                if (get<1>(temp_var1) == (BigNumber)0)
                {
                   cerr << "Arithmetic error";
                }
-               stack_.push((BigNumber)get<0>(temp_var2) / get<1>(temp_var1));
+               stack_.push(temp_var3 / get<1>(temp_var1));
                break;
             case ('%'):
-               if (get<0>(temp_var1) == 0)
+               if (get<1>(temp_var1) == (BigNumber)0)
                {
                   cerr << "Arithmetic error";
                }
-               stack_.push((BigNumber)get<0>(temp_var2) % get<1>(temp_var1));
+               stack_.push(temp_var3 % get<1>(temp_var1));
                break;
             }
          }
@@ -226,28 +229,104 @@ void TableToken::Interpreter(stack<variant<int, BigNumber>>& stack_)
          stack_.pop();
          temp_var2 = stack_.top();
          stack_.pop();
+         a = temp_var1.index();
+         b = temp_var2.index();
 
-         switch (get<0>(table_tokens[number_token].value))
+         if (a == 0 && b == 0)
+            switch (get<0>(table_tokens[number_token].value))
+            {
+            case (Equal):
+               stack_.push(get<0>(temp_var2) == get<0>(temp_var1));
+               break;
+            case (Not_equal):
+               stack_.push(get<0>(temp_var2) != get<0>(temp_var1));
+               break;
+            case (Less_then):
+               stack_.push(get<0>(temp_var2) < get<0>(temp_var1));
+               break;
+            case(More_then):
+               stack_.push(get<0>(temp_var2) > get<0>(temp_var1));
+               break;
+            case(Less_or_equal_then):
+               stack_.push(get<0>(temp_var2) <= get<0>(temp_var1));
+               break;
+            case (More_or_equal_then):
+               stack_.push(get<0>(temp_var2) >= get<0>(temp_var1));
+               break;
+            }
+         else if (a == 1 && b == 1)
+            switch (get<0>(table_tokens[number_token].value))
+            {
+            case (Equal):
+               stack_.push(get<1>(temp_var2) == get<1>(temp_var1));
+               break;
+            case (Not_equal):
+               stack_.push(get<1>(temp_var2) != get<1>(temp_var1));
+               break;
+            case (Less_then):
+               stack_.push(get<1>(temp_var2) < get<1>(temp_var1));
+               break;
+            case(More_then):
+               stack_.push(get<1>(temp_var2) > get<1>(temp_var1));
+               break;
+            case(Less_or_equal_then):
+               stack_.push(get<1>(temp_var2) <= get<1>(temp_var1));
+               break;
+            case (More_or_equal_then):
+               stack_.push(get<1>(temp_var2) >= get<1>(temp_var1));
+               break;
+            }
+         else if (a == 0 && b == 1)
          {
-         case (Equal):
-            stack_.push(temp_var2 == temp_var1);
-            break;
-         case (Not_equal):
-            stack_.push(temp_var2 != temp_var1);
-            break;
-         case (Less_then):
-            stack_.push(temp_var2 < temp_var1);
-            break;
-         case(More_then):
-            stack_.push(temp_var2 > temp_var1);
-            break;
-         case(Less_or_equal_then):
-            stack_.push(temp_var2 <= temp_var1);
-            break;
-         case (More_or_equal_then):
-            stack_.push(temp_var2 >= temp_var1);
-            break;
+            temp_var3 = get<0>(temp_var1);
+            switch (get<0>(table_tokens[number_token].value))
+            {
+            case (Equal):
+               stack_.push(get<1>(temp_var2) == temp_var3);
+               break;
+            case (Not_equal):
+               stack_.push(get<1>(temp_var2) != temp_var3);
+               break;
+            case (Less_then):
+               stack_.push(get<1>(temp_var2) < temp_var3);
+               break;
+            case(More_then):
+               stack_.push(get<1>(temp_var2) > temp_var3);
+               break;
+            case(Less_or_equal_then):
+               stack_.push(get<1>(temp_var2) <= temp_var3);
+               break;
+            case (More_or_equal_then):
+               stack_.push(get<1>(temp_var2) >= temp_var3);
+               break;
+            }
          }
+         else if (a == 1 && b == 0)
+         {
+            temp_var3 = get<0>(temp_var2);
+            switch (get<0>(table_tokens[number_token].value))
+            {
+            case (Equal):
+               stack_.push(temp_var3 == get<1>(temp_var1));
+               break;
+            case (Not_equal):
+               stack_.push(temp_var3 != get<1>(temp_var1));
+               break;
+            case (Less_then):
+               stack_.push(temp_var3 < get<1>(temp_var1));
+               break;
+            case(More_then):
+               stack_.push(temp_var3 > get<1>(temp_var1));
+               break;
+            case(Less_or_equal_then):
+               stack_.push(temp_var3 <= get<1>(temp_var1));
+               break;
+            case (More_or_equal_then):
+               stack_.push(temp_var3 >= get<1>(temp_var1));
+               break;
+            }
+         }
+
 
          break;
 
@@ -291,11 +370,8 @@ void TableToken::Interpreter(stack<variant<int, BigNumber>>& stack_)
 
       case(TokenType::READBN):
 
-         
-
          cin >> temp_var3;
          stack_.push(temp_var3);
-
 
          break;
 

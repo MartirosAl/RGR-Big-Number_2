@@ -1,7 +1,13 @@
 pushbn 1
 pop x
-pushbn x
-pushbn 001
+push x
+write
+push x
+pushbn 1
++
+pop x
+push x
+push 100
 >=
 ji 14
 jmp 3

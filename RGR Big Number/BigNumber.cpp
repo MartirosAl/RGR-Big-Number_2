@@ -543,6 +543,16 @@ bool BigNumber::operator!=(const BigNumber& other_) const
    return !(*this == other_);
 }
 
+int reverseDigits(int num)
+{
+   int rev_num = 0;
+   while (num > 0) {
+      rev_num = rev_num * 10 + num % 10;
+      num = num / 10;
+   }
+   return rev_num;
+}
+
 void BigNumber::Clear()
 {
    delete[] number;
@@ -668,24 +678,4 @@ istream& operator>>(istream& stream, BigNumber& object_)
    stream.ignore();//Игнорируем \n или пробел
 
    return stream;
-}
-
-BigNumber::operator int() const
-{
-   short max_int_s[] = { 7, 4, 6, 3, 8, 4, 7, 4, 1, 2 };
-   BigNumber max_int(max_int_s, 10);
-
-   int result = 0;
-
-   if (*this < max_int)
-   {
-      for (size_t i = size; i > 0; i--)
-      {
-         result = result * 10 + (int)number[i-1];
-      }
-   }
-   else
-      throw "Too long number for int";
-   
-   return result;
 }

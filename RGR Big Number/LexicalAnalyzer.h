@@ -664,12 +664,8 @@ public:
 
    void G2b()
    {
-      cout << get<0>(token.value) << endl;
+      
       get<1>(register_number).push_back((short)get<0>(token.value));
-
-      for (int i = 0; i < get<1>(register_number).size(); i++)
-         cout << get<1>(register_number)[i];
-      cout << endl;
 
       state = G2;
    }

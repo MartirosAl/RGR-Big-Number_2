@@ -10,7 +10,7 @@ int main()
 
    TableToken tokens;
 
-   tokens.Lexical_Analyzer("input20.txt");
+   tokens.Lexical_Analyzer("input10.txt");
 
    tokens.Print();
 
