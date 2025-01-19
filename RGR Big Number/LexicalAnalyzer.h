@@ -108,6 +108,9 @@ public:
    struct SymbolicToken
    {
       TokenType token_class;
+      //get<0> - это int значение для транслитератора, отношений и ариф. операций
+      //get<1> - это ячейка для таблицы констант
+      //get<2> - это ячейка дтя таблицы переменных
       variant<int, set<variant<int, BigNumber>>::iterator, map<string, variant<int, BigNumber>>::iterator> value;
       int number_line;
    };
@@ -442,6 +445,8 @@ public:
    TokenType register_type_token;
 
    //Регистр указателя содержит указатель на таблицу имён для лексем PUSH и POP
+   //get<0> - итератор(указатель) на таблицу констант
+   //get<1> - итератор(указатель) на таблицу переменных
    variant<set<variant<int, BigNumber>>::iterator, map<string, variant<int, BigNumber>>::iterator> register_indicator;
 
    //Регистр числа используется для вычисления констант
