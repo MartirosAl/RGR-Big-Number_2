@@ -10,13 +10,15 @@ int main()
 
    TableToken tokens;
 
-   tokens.Lexical_Analyzer("input1.txt");
+   tokens.Lexical_Analyzer("Программа Даши.txt");
 
    tokens.Print();
 
    cout << endl << "Input:" << endl;
    
    stack<variant<int, BigNumber>> stack;
+
+   tokens.PrintStackOnEveryStep();
 
    tokens.Interpreter(stack);
 

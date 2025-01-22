@@ -200,11 +200,15 @@ public:
    const KeywordDetection table_detection;
 
 
-   //»Õ“≈–œ–»“¿“Œ–//
+   //»Õ“≈–œ–≈“¿“Œ–//
 
    void JUMP(int& number_token);
 
    void Interpreter(stack<variant<int, BigNumber>>& stack_);
+
+   void PrintStackOnEveryStep(bool a = true);
+
+   bool print_stack_on_every_step = false;
 
    //‘”Õ÷ »»//
 

@@ -82,5 +82,11 @@
     <Text Include="input60.txt">
       <Filter>Файлы ресурсов</Filter>
     </Text>
+    <Text Include="Программа Даши.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
+    <Text Include="Программа Лизы.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
   </ItemGroup>
 </Project>

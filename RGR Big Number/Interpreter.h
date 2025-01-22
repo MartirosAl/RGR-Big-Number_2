@@ -1,6 +1,10 @@
 #pragma once
 #include "LexicalAnalyzer.h"
 
+void TableToken::PrintStackOnEveryStep(bool a)
+{
+   print_stack_on_every_step = a;
+}
 
 void TableToken::JUMP(int& number_token)
 {
@@ -8,7 +12,7 @@ void TableToken::JUMP(int& number_token)
    {
       if (table_tokens[x].number_line == get<0>(*get<1>(table_tokens[number_token].value)))
       {
-         number_token = x - 1;// остыль внутри for станет нужным значением
+         number_token = x - 1;// остыль, внутри for станет нужным значением
          return;
       }
    }
@@ -40,6 +44,10 @@ void TableToken::Interpreter(stack<variant<int, BigNumber>>& stack_)
    
    for (int number_token = 0; number_token < table_tokens.size(); number_token++)
    {
+      if (print_stack_on_every_step)
+      {
+         cout << "- " << table_tokens[number_token].number_line << " " << TokenTypeString[table_tokens[number_token].token_class] << endl;
+      }
       switch (table_tokens[number_token].token_class)
       {
       case (TokenType::PUSH):
@@ -70,7 +78,7 @@ void TableToken::Interpreter(stack<variant<int, BigNumber>>& stack_)
          
          if (stack_.empty())
          {
-            cerr << "Stack usage error";
+            cerr << "Stack usage error " << table_tokens[number_token].number_line;
             return;
          }
 
@@ -89,7 +97,7 @@ void TableToken::Interpreter(stack<variant<int, BigNumber>>& stack_)
 
          if (stack_.size() <= 1)
          {
-            cerr << "Stack usage error";
+            cerr << "Stack usage error " << table_tokens[number_token].number_line;
             return;
          }
 
@@ -221,7 +229,7 @@ void TableToken::Interpreter(stack<variant<int, BigNumber>>& stack_)
 
          if (stack_.size() <= 1)
          {
-            cerr << "Stack usage error";
+            cerr << "Stack usage error " << table_tokens[number_token].number_line;
             return;
          }
 
@@ -339,7 +347,7 @@ void TableToken::Interpreter(stack<variant<int, BigNumber>>& stack_)
 
          if (stack_.empty())
          {
-            cerr << "Stack usage error";
+            cerr << "Stack usage error " << table_tokens[number_token].number_line;
             return;
          }
 
@@ -361,7 +369,7 @@ void TableToken::Interpreter(stack<variant<int, BigNumber>>& stack_)
   
       case(TokenType::READ):
 
-
+         cout << "Enter: ";
          cin >> a;
          stack_.push(a);
          
@@ -379,7 +387,7 @@ void TableToken::Interpreter(stack<variant<int, BigNumber>>& stack_)
          
          if (stack_.empty())
          {
-            cerr << "Stack usage error";
+            cerr << "Stack usage error " << table_tokens[number_token].number_line;
             return;
          }
 
@@ -413,5 +421,20 @@ void TableToken::Interpreter(stack<variant<int, BigNumber>>& stack_)
       default:
          break;
       };
+
+      //ѕечатать стек на каждом шаге
+      if (print_stack_on_every_step)
+      {
+         
+         if (stack_.empty())
+            cout << "empty" << endl;
+         for (std::stack<variant<int, BigNumber>> dump = stack_; !dump.empty(); dump.pop())
+            if (dump.top().index() == 0)
+               std::cout << get<0>(dump.top()) << '\n';
+            else if (dump.top().index() == 1)
+               std::cout << get<1>(dump.top()) << '\n';
+         cout << "- " << table_tokens[number_token].number_line << " " << TokenTypeString[table_tokens[number_token].token_class] << endl;
+      }
+
    }
 }

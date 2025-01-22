@@ -1,3 +1,33 @@
+read
+pop x
 push 1
+pop z
+push x
+push 1
+<
+ji 30
+push 1
+pop y
+push y
+push 2
++
+pop y
+push y
+push x
+>=
+ji 28
+push x
+push y
+%
+ji 11
+push z
+push y
++
+pop z
+jmp 11
+push z
+write
+end
+push 0
 write
 end
