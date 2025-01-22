@@ -108,6 +108,12 @@ public:
    struct SymbolicToken
    {
       TokenType token_class;
+      int value;
+   };
+
+   struct Token
+   {
+      TokenType token_class;
       //get<0> - это int значение для транслитератора, отношений и ариф. операций
       //get<1> - это ячейка для таблицы констант
       //get<2> - это ячейка дтя таблицы переменных
@@ -188,7 +194,7 @@ public:
 
    //Таблица лексем для вывода
    //Вектор вариантов (int, set<variant<int, BigNumber>>::iterator, map<string, variant<int, BigNumber>>::iterator)
-   vector<SymbolicToken> table_tokens;
+   vector<Token> table_tokens;
 
    //Таблицы для обнаружения ключевых слов
    const KeywordDetection table_detection;
@@ -243,9 +249,6 @@ public:
          cout << endl;
       }
    }
-
-
-
 
    SymbolicToken Transliterator(int character)
    {
@@ -387,7 +390,7 @@ public:
    //Процедура СОЗДАТЬ_ЛЕКСЕМУ
    void Create_Token()
    {
-      SymbolicToken result;
+      Token result;
       
       if (register_type_token == TokenType::RELATION)
          result.value = register_relation;
@@ -473,9 +476,12 @@ public:
    //Переменная для M1
    int tempforswitchinM1;
 
+   //Начальное состояние - A1
    States state = A1;
 
-   SymbolicToken token;
+   Token token;
+
+   SymbolicToken symbolic_token;
 
 
    //КОМАНДЫ//
@@ -562,7 +568,7 @@ public:
    void B1a()
    {
       state = B1;
-      register_detection = Find_In_Array_table_first_vector(get<0>(token.value));
+      register_detection = Find_In_Array_table_first_vector(symbolic_token.value);
       if (register_detection == -1)
       {
          Error_Handler();
@@ -574,7 +580,7 @@ public:
    void C1a()
    {
       register_type_token = TokenType::ARITHMETIC_OPERATION;
-      register_value = (int)get<0>(token.value);
+      register_value = (int)(symbolic_token.value);
       Create_Token();
 
       state = C1;
@@ -617,7 +623,7 @@ public:
    {
       state = C1;
 
-      if (get<0>(token.value) != Equal)
+      if (symbolic_token.value != Equal)
       {
          Error_Handler();
          return;
@@ -630,7 +636,7 @@ public:
    void D1a()
    {
       register_type_token = TokenType::RELATION;
-      register_relation = get<0>(token.value);
+      register_relation = symbolic_token.value;
 
       state = D1;
    }
@@ -642,14 +648,14 @@ public:
 
    void G1a()
    {
-      register_number = get<0>(token.value);
+      register_number = symbolic_token.value;
 
       state = G1;
    }
 
    void G1b()
    {
-      register_number = get<0>(register_number) * 10 + get<0>(token.value);
+      register_number = get<0>(register_number) * 10 + symbolic_token.value;
 
       state = G1;
    }
@@ -662,7 +668,7 @@ public:
          register_number = a;
       }
 
-      get<1>(register_number).push_back(get<0>(token.value));
+      get<1>(register_number).push_back(symbolic_token.value);
 
       state = G2;
    }
@@ -670,21 +676,21 @@ public:
    void G2b()
    {
       
-      get<1>(register_number).push_back((short)get<0>(token.value));
+      get<1>(register_number).push_back(symbolic_token.value);
 
       state = G2;
    }
 
    void H1a()
    {
-      register_variable = get<0>(token.value);
+      register_variable = symbolic_token.value;
 
       state = H1;
    }
 
    void H1b()
    {
-      register_variable.push_back(get<0>(token.value));
+      register_variable.push_back(symbolic_token.value);
 
       state = H1;
    }
@@ -791,9 +797,9 @@ public:
       if (register_detection == -1)
          return;
       tempforswitchinM1 = table_detection.table_detection[register_detection][1];
-      if (table_detection.table_detection[register_detection][0] != get<0>(token.value))
+      if (table_detection.table_detection[register_detection][0] != symbolic_token.value)
       {
-         if (table_detection.table_detection[register_detection][2] != -1 && table_detection.table_detection[table_detection.table_detection[register_detection][2]][0] == get<0>(token.value))
+         if (table_detection.table_detection[register_detection][2] != -1 && table_detection.table_detection[table_detection.table_detection[register_detection][2]][0] == symbolic_token.value)
          {
             tempforswitchinM1 = table_detection.table_detection[table_detection.table_detection[register_detection][2]][1];
             register_detection = table_detection.table_detection[register_detection][2];
@@ -899,7 +905,7 @@ public:
 
    //ЛЕКСИЧЕСКИЙ АНАЛИЗАТОР//
 
-   vector<SymbolicToken> Lexical_Analyzer(const char* filename)
+   vector<Token> Lexical_Analyzer(const char* filename)
    {
       ifstream in(filename);
       if (!in)
@@ -912,14 +918,14 @@ public:
       while (!stop)
       {
          int character = in.get();
-         token = Transliterator(character);
+         symbolic_token = Transliterator(character);
 
          switch (state)
          {
 
             ////////////////////////////////////////////////////////////////////////////A1
          case (A1):
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::LETTER)://B1a
 
@@ -960,7 +966,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////A2
          case (A2):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::LETTER)://B1a
 
@@ -1006,7 +1012,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////B1
          case(B1):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::LETTER)://M1
 
@@ -1027,7 +1033,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////C1
          case(C1):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::SPACE)://C1
 
@@ -1058,7 +1064,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////C1
          case(C2):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::LETTER)://C2c
 
@@ -1095,7 +1101,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////D1
          case (D1):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::RELATION)://C1h
 
@@ -1131,7 +1137,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////E1
          case (E1):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case(TokenType::LETTER):
 
@@ -1157,7 +1163,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////E1
          case (E2):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::SPACE)://F2
 
@@ -1178,7 +1184,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////E3
          case (E3):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
 
             case(TokenType::LETTER):
@@ -1205,7 +1211,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////E4
          case (E4):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::SPACE)://F4
 
@@ -1226,7 +1232,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////E5
          case (E5):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::SPACE)://F5
 
@@ -1247,7 +1253,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////E6
          case (E6):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::SPACE)://F6
 
@@ -1268,7 +1274,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////F1
          case(F1):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::LETTER)://H1a
 
@@ -1299,7 +1305,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////F2
          case(F2):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::DIGIT)://G1a
 
@@ -1325,7 +1331,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////F3
          case(F3):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::LETTER)://H1a
 
@@ -1351,7 +1357,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////F4
          case(F4):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::LETTER)://H1a
 
@@ -1377,7 +1383,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////F5
          case(F5):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::LETTER)://H1a
 
@@ -1408,7 +1414,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////F6
          case(F6):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::DIGIT)://G1a
 
@@ -1435,7 +1441,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////G1
          case(G1):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::DIGIT)://G1b
 
@@ -1471,7 +1477,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////G2
          case(G2):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::DIGIT)://G2b
 
@@ -1507,7 +1513,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////H1
          case(H1):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::LETTER)://H1b
 
@@ -1548,7 +1554,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////I1
          case(I1):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
 
             case (TokenType::LETTER)://I1
@@ -1605,7 +1611,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////I1
          case(I2):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case(TokenType::LETTER)://I2
 
@@ -1661,7 +1667,7 @@ public:
             ////////////////////////////////////////////////////////////////////////////J1
          case(J1):
 
-            switch (token.token_class)
+            switch (symbolic_token.token_class)
             {
             case (TokenType::LETTER)://J1
 
